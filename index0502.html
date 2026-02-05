@@ -804,44 +804,19 @@ alert('⚠️ Erro ao salvar dados. O armazenamento local pode estar cheio ou bl
 }
 // ========== LOGIN ==========
 document.getElementById('btn-login').addEventListener('click', () => {
-const usuario = document.getElementById('login-user').value;
-const senha = document.getElementById('login-pass').value;
-const errorDiv = document.getElementById('error-login');
-// Validar seleção de usuário
-if (!usuario) {
-errorDiv.textContent = '⚠️ Selecione um usuário!';
-errorDiv.style.display = 'block';
-return;
-}
-// Validar senha
-if (!senha) {
-errorDiv.textContent = '⚠️ Digite a senha!';
-errorDiv.style.display = 'block';
-return;
-}
-const db = buscarDados();
-const user = db.usuarios.find(u => u.login === usuario && u.senha === senha && u.ativo !== false);
-if (user) {
-sessionStorage.setItem('user_id', user.id);
-sessionStorage.setItem('user_perfil', user.perfil);
-sessionStorage.setItem('user_nome', user.nome);
-document.getElementById('user-name').textContent = user.nome;
-document.getElementById('screen-login').style.display = 'none';
-document.getElementById('screen-vendas').style.display = 'block';
-carregarProdutos();
-atualizarStatusBackup();
-errorDiv.style.display = 'none';
-} else {
-errorDiv.textContent = '❌ Usuário ou senha inválidos!';
-errorDiv.style.display = 'block';
-}
+  const usuario = document.getElementById('login-user').value;
+  const senha = document.getElementById('login-pass').value;
+
+  if (!usuario || !senha) {
+    alert('Selecione o usuário e digite a senha');
+    return;
+  }
+
+  inicializarDados();
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-vendas').style.display = 'block';
 });
-// Enter no campo de senha também faz login
-document.getElementById('login-pass').addEventListener('keypress', (e) => {
-if (e.key === 'Enter') {
-document.getElementById('btn-login').click();
-}
-});
+
 document.getElementById('btn-logout').addEventListener('click', () => {
 sessionStorage.clear();
 document.getElementById('screen-vendas').style.display = 'none';
