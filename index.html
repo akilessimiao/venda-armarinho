@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🛒 Sistema de Vendas Completo - Armarinho</title>
+<title>🛒 Sistema de Vendas - Armarinho Completo</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root {
@@ -17,6 +17,9 @@
   --zreport: #34495e;
   --whatsapp: #25D366;
   --barcode: #9b59b6;
+  --stock-low: #e74c3c;
+  --stock-medium: #f39c12;
+  --stock-high: #2ecc71;
 }
 * {
   margin: 0;
@@ -321,6 +324,13 @@ body {
   background: #8e44ad;
   transform: translateY(-2px);
 }
+.btn-stock {
+  background: #9b59b6;
+  color: white;
+}
+.btn-stock:hover {
+  background: #8e44ad;
+}
 .modal {
   display: none;
   position: fixed;
@@ -338,9 +348,11 @@ body {
   padding: 30px;
   border-radius: 15px;
   width: 90%;
-  max-width: 600px;
+  max-width: 700px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .modal h3 {
   margin-bottom: 20px;
@@ -376,6 +388,7 @@ body {
   display: flex;
   gap: 15px;
   margin-top: 20px;
+  margin-bottom: 20px;
 }
 .empty-cart {
   padding: 30px;
@@ -593,6 +606,85 @@ body {
   background: var(--success);
   color: white;
 }
+.badge-stock-low {
+  background: var(--stock-low);
+  color: white;
+}
+.badge-stock-medium {
+  background: var(--stock-medium);
+  color: white;
+}
+.badge-stock-high {
+  background: var(--stock-high);
+  color: white;
+}
+.stock-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+.stock-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stock-item:last-child {
+  border-bottom: none;
+}
+.stock-item .info {
+  flex: 3;
+}
+.stock-item .info .name {
+  font-weight: 500;
+}
+.stock-item .info .details {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-top: 3px;
+}
+.stock-item .quantity {
+  flex: 1;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+.stock-item .actions {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.btn-sm.edit {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-sm.remove {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 40%;
+  }
+  .actions {
+    flex-direction: column;
+  }
+}
 </style>
 </head>
 <body>
@@ -629,6 +721,9 @@ body {
       <i>🛒</i> Armarinho - <span id="user-name">Operador</span>
     </div>
     <div style="display: flex; gap: 10px;">
+      <button class="btn btn-stock" id="btn-estoque" style="padding:8px 15px; font-size:14px; display:none;">
+        📦 Estoque
+      </button>
       <button class="btn btn-zreport" id="btn-leitura-z" style="padding:8px 15px; font-size:14px;">
         📊 Leitura Z
       </button>
@@ -775,11 +870,15 @@ body {
       <button class="btn btn-backup" id="btn-criar-backup" style="width:100%; padding:15px; font-size:18px; margin-bottom:20px;">
         📤 Gerar Backup Agora
       </button>
+      <button class="btn btn-primary" id="btn-download-backup" style="width:100%; padding:15px; font-size:18px; margin-bottom:20px; background:#2ecc71;">
+        💾 Baixar Backup (.json)
+      </button>
       <div style="background:#e8f4fc; padding:15px; border-radius:8px;">
         <strong style="color:#2980b9;">ℹ️ Informações do Backup:</strong>
         <ul style="margin-top:10px; margin-left:20px; font-size:14px; color:#2c3e50;">
           <li>Clientes cadastrados</li>
           <li>Produtos e estoque</li>
+          <li>Fornecedores</li>
           <li>Vendas realizadas</li>
           <li>Configurações do sistema</li>
         </ul>
@@ -845,8 +944,8 @@ body {
     
     <div class="tab-content" id="tab-novo-cliente">
       <div class="form-group">
-        <label for="cliente-nome">Nome *</label>
-        <input type="text" id="cliente-nome" required>
+        <label for="cliente-nome">Nome Completo *</label>
+        <input type="text" id="cliente-nome" placeholder="Ex: Maria Silva" required>
       </div>
       <div class="form-group">
         <label for="cliente-tipo">Tipo de Documento *</label>
@@ -856,16 +955,24 @@ body {
         </select>
       </div>
       <div class="form-group">
-        <label for="cliente-documento">Documento *</label>
-        <input type="text" id="cliente-documento" required maxlength="18">
+        <label for="cliente-documento">CPF/CNPJ *</label>
+        <input type="text" id="cliente-documento" placeholder="Digite o CPF ou CNPJ" required maxlength="18">
       </div>
       <div class="form-group">
-        <label for="cliente-telefone">Telefone</label>
-        <input type="text" id="cliente-telefone" placeholder="(00) 00000-0000">
+        <label for="cliente-whatsapp">WhatsApp *</label>
+        <input type="text" id="cliente-whatsapp" placeholder="(00) 90000-0000" required>
       </div>
       <div class="form-group">
-        <label for="cliente-email">Email</label>
+        <label for="cliente-telefone">Telefone (opcional)</label>
+        <input type="text" id="cliente-telefone" placeholder="(00) 0000-0000">
+      </div>
+      <div class="form-group">
+        <label for="cliente-email">Email (opcional)</label>
         <input type="email" id="cliente-email" placeholder="exemplo@email.com">
+      </div>
+      <div class="form-group">
+        <label for="cliente-endereco">Endereço (opcional)</label>
+        <input type="text" id="cliente-endereco" placeholder="Rua, número, bairro, cidade">
       </div>
     </div>
     
@@ -879,7 +986,7 @@ body {
 <!-- Modal Produtos -->
 <div class="modal" id="modal-produtos">
   <div class="modal-content">
-    <h3>📦 Produtos</h3>
+    <h3>📦 Cadastro de Produtos</h3>
     <div class="tabs">
       <div class="tab active" data-tab="lista-prod">📋 Lista</div>
       <div class="tab" data-tab="novo-prod">➕ Novo</div>
@@ -894,30 +1001,55 @@ body {
     
     <div class="tab-content" id="tab-novo-produto">
       <div class="form-group">
-        <label for="produto-codigo">Código</label>
-        <input type="text" id="produto-codigo" placeholder="Ex: 001">
+        <label for="produto-fornecedor">Fornecedor *</label>
+        <input type="text" id="produto-fornecedor" placeholder="Nome do fornecedor" required>
       </div>
       <div class="form-group">
-        <label for="produto-codigo-barra">Código de Barras</label>
-        <input type="text" id="produto-codigo-barra" placeholder="Código EAN-13 (opcional)">
+        <label for="produto-codigo-barra">Código de Barras (EAN-13)</label>
+        <input type="text" id="produto-codigo-barra" placeholder="7891234567890 (opcional)">
       </div>
       <div class="form-group">
-        <label for="produto-descricao">Descrição *</label>
-        <input type="text" id="produto-descricao" required>
+        <label for="produto-descricao">Nome do Produto *</label>
+        <input type="text" id="produto-descricao" placeholder="Ex: Botão de Madeira" required>
       </div>
       <div class="form-group">
-        <label for="produto-preco">Preço de Venda *</label>
-        <input type="number" id="produto-preco" step="0.01" min="0.01" required>
+        <label for="produto-quantidade">Quantidade em Estoque *</label>
+        <input type="number" id="produto-quantidade" min="0" value="0" required>
       </div>
       <div class="form-group">
-        <label for="produto-estoque">Estoque</label>
-        <input type="number" id="produto-estoque" min="0" value="0">
+        <label for="produto-preco-custo">Preço de Custo (R$) *</label>
+        <input type="number" id="produto-preco-custo" step="0.01" min="0.01" placeholder="Ex: 3.50" required>
+      </div>
+      <div class="form-group">
+        <label for="produto-preco-venda">Preço de Venda (R$) *</label>
+        <input type="number" id="produto-preco-venda" step="0.01" min="0.01" placeholder="Ex: 5.00" required>
       </div>
     </div>
     
     <div class="modal-buttons">
       <button class="btn btn-danger" id="btn-fechar-produtos" style="flex:1; background:#95a5a6; color:white">Fechar</button>
       <button class="btn btn-primary" id="btn-salvar-produto" style="flex:1">💾 Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Estoque (Admin) -->
+<div class="modal" id="modal-estoque">
+  <div class="modal-content">
+    <h3>📦 Controle de Estoque</h3>
+    <div class="form-group">
+      <input type="text" id="busca-estoque" placeholder="Buscar produto no estoque..." style="margin-bottom:15px;">
+    </div>
+    <div style="display: flex; justify-content: space-between; padding:10px; background:#f8f9fa; border-radius:8px; margin-bottom:15px; font-weight:bold;">
+      <div style="flex:3;">Produto</div>
+      <div style="flex:1; text-align:center;">Estoque</div>
+      <div style="flex:1; text-align:center;">Ações</div>
+    </div>
+    <div class="stock-list" id="lista-estoque">
+      <!-- Lista de estoque será carregada aqui -->
+    </div>
+    <div class="modal-buttons">
+      <button class="btn" id="btn-fechar-estoque" style="flex:1; background:#95a5a6; color:white">Fechar</button>
     </div>
   </div>
 </div>
@@ -987,19 +1119,19 @@ function inicializarDados() {
         { id: 2, nome: 'Operador', login: 'operador', senha: 'operador123', perfil: 'operador' }
       ],
       produtos: [
-        { id: 1, codigo: '001', codigo_barra: '7891234567890', descricao: 'Botão de Madeira', preco_venda: 5.00, estoque: 120, ativo: true },
-        { id: 2, codigo: '002', codigo_barra: '7891234567891', descricao: 'Linha de Algodão', preco_venda: 8.50, estoque: 85, ativo: true },
-        { id: 3, codigo: '003', codigo_barra: '7891234567892', descricao: 'Agulha de Costura', preco_venda: 3.20, estoque: 200, ativo: true },
-        { id: 4, codigo: '004', codigo_barra: '7891234567893', descricao: 'Fita Métrica', preco_venda: 12.00, estoque: 50, ativo: true },
-        { id: 5, codigo: '005', codigo_barra: '7891234567894', descricao: 'Tesoura Profissional', preco_venda: 25.00, estoque: 30, ativo: true },
-        { id: 6, codigo: '006', codigo_barra: '7891234567895', descricao: 'Zipper 20cm', preco_venda: 4.80, estoque: 150, ativo: true },
-        { id: 7, codigo: '007', codigo_barra: '7891234567896', descricao: 'Elástico 1m', preco_venda: 2.50, estoque: 200, ativo: true },
-        { id: 8, codigo: '008', codigo_barra: '7891234567897', descricao: 'Viés Estampado', preco_venda: 6.90, estoque: 75, ativo: true }
+        { id: 1, fornecedor: 'Fornecedor A', codigo_barra: '7891234567890', descricao: 'Botão de Madeira', quantidade: 120, preco_custo: 2.50, preco_venda: 5.00, ativo: true },
+        { id: 2, fornecedor: 'Fornecedor B', codigo_barra: '7891234567891', descricao: 'Linha de Algodão', quantidade: 85, preco_custo: 4.25, preco_venda: 8.50, ativo: true },
+        { id: 3, fornecedor: 'Fornecedor C', codigo_barra: '7891234567892', descricao: 'Agulha de Costura', quantidade: 200, preco_custo: 1.60, preco_venda: 3.20, ativo: true },
+        { id: 4, fornecedor: 'Fornecedor A', codigo_barra: '7891234567893', descricao: 'Fita Métrica', quantidade: 50, preco_custo: 6.00, preco_venda: 12.00, ativo: true },
+        { id: 5, fornecedor: 'Fornecedor D', codigo_barra: '7891234567894', descricao: 'Tesoura Profissional', quantidade: 30, preco_custo: 12.50, preco_venda: 25.00, ativo: true },
+        { id: 6, fornecedor: 'Fornecedor B', codigo_barra: '7891234567895', descricao: 'Zipper 20cm', quantidade: 150, preco_custo: 2.40, preco_venda: 4.80, ativo: true },
+        { id: 7, fornecedor: 'Fornecedor C', codigo_barra: '7891234567896', descricao: 'Elástico 1m', quantidade: 200, preco_custo: 1.25, preco_venda: 2.50, ativo: true },
+        { id: 8, fornecedor: 'Fornecedor A', codigo_barra: '7891234567897', descricao: 'Viés Estampado', quantidade: 75, preco_custo: 3.45, preco_venda: 6.90, ativo: true }
       ],
       clientes: [
-        { id: 1, nome: 'Maria Silva', tipo: 'cpf', documento: '12345678901', telefone: '84999999999', email: 'maria@email.com' },
-        { id: 2, nome: 'João Santos', tipo: 'cpf', documento: '98765432109', telefone: '84888888888', email: 'joao@email.com' },
-        { id: 3, nome: 'Confecção LTDA', tipo: 'cnpj', documento: '12345678000190', telefone: '8433333333', email: 'contato@confeccao.com.br' }
+        { id: 1, nome: 'Maria Silva', tipo: 'cpf', documento: '12345678901', whatsapp: '84999999999', telefone: '8433333333', email: 'maria@email.com', endereco: 'Rua A, 123', ativo: true },
+        { id: 2, nome: 'João Santos', tipo: 'cpf', documento: '98765432109', whatsapp: '84888888888', telefone: '8444444444', email: 'joao@email.com', endereco: 'Rua B, 456', ativo: true },
+        { id: 3, nome: 'Confecção LTDA', tipo: 'cnpj', documento: '12345678000190', whatsapp: '84777777777', telefone: '8433333333', email: 'contato@confeccao.com.br', endereco: 'Av. Industrial, 789', ativo: true }
       ],
       vendas: [],
       movimentacoes: [],
@@ -1035,6 +1167,16 @@ function formatarDocumento(doc, tipo) {
     return doc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
   return doc;
+}
+
+function formatarTelefone(tel) {
+  tel = tel.replace(/\D/g, '');
+  if (tel.length === 11) {
+    return tel.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, '($1) $2.$3-$4');
+  } else if (tel.length === 10) {
+    return tel.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  }
+  return tel;
 }
 
 function buscarDados() {
@@ -1084,6 +1226,12 @@ document.getElementById('btn-login').addEventListener('click', () => {
     document.getElementById('user-name').textContent = user.nome;
     document.getElementById('screen-login').style.display = 'none';
     document.getElementById('screen-vendas').style.display = 'block';
+    
+    // Mostrar botão de estoque só para admin
+    if (user.perfil === 'admin') {
+      document.getElementById('btn-estoque').style.display = 'block';
+    }
+    
     carregarProdutos();
     carregarClientes();
     errorDiv.style.display = 'none';
@@ -1117,10 +1265,10 @@ function carregarProdutos() {
   const lista = document.getElementById('lista-produtos');
   lista.innerHTML = '';
   
-  db.produtos.filter(p => p.ativo !== false).forEach(p => {
+  db.produtos.filter(p => p.ativo !== false && p.quantidade > 0).forEach(p => {
     const div = document.createElement('div');
     div.className = 'product-item';
-    div.innerHTML = `<div class="name">${p.descricao}</div><div class="price">${formatarMoeda(p.preco_venda)}</div>`;
+    div.innerHTML = `<div class="name">${p.descricao}</div><div class="price">${formatarMoeda(p.preco_venda)} <small style="color:#7f8c8d;">(${p.quantidade} unid)</small></div>`;
     div.addEventListener('click', () => adicionarAoCarrinho(p));
     lista.appendChild(div);
   });
@@ -1129,10 +1277,10 @@ function carregarProdutos() {
   document.getElementById('busca-produto').addEventListener('input', (e) => {
     const termo = e.target.value.toLowerCase();
     lista.innerHTML = '';
-    db.produtos.filter(p => p.ativo !== false && p.descricao.toLowerCase().includes(termo)).forEach(p => {
+    db.produtos.filter(p => p.ativo !== false && p.quantidade > 0 && p.descricao.toLowerCase().includes(termo)).forEach(p => {
       const div = document.createElement('div');
       div.className = 'product-item';
-      div.innerHTML = `<div class="name">${p.descricao}</div><div class="price">${formatarMoeda(p.preco_venda)}</div>`;
+      div.innerHTML = `<div class="name">${p.descricao}</div><div class="price">${formatarMoeda(p.preco_venda)} <small style="color:#7f8c8d;">(${p.quantidade} unid)</small></div>`;
       div.addEventListener('click', () => adicionarAoCarrinho(p));
       lista.appendChild(div);
     });
@@ -1146,12 +1294,16 @@ function carregarClientes() {
   // Modal Selecionar Cliente
   const listaModal = document.getElementById('lista-clientes-modal');
   listaModal.innerHTML = '';
-  db.clientes.forEach(c => {
+  db.clientes.filter(c => c.ativo !== false).forEach(c => {
     const div = document.createElement('div');
     div.className = 'client-item';
     div.innerHTML = `
       <div class="name">${c.nome}</div>
-      <div class="doc"><span class="badge badge-${c.tipo}">${c.tipo.toUpperCase()}</span> ${formatarDocumento(c.documento, c.tipo)}</div>
+      <div class="doc">
+        <span class="badge badge-${c.tipo}">${c.tipo.toUpperCase()}</span> 
+        ${formatarDocumento(c.documento, c.tipo)} | 
+        <span style="color:#25D366;">${formatarTelefone(c.whatsapp)}</span>
+      </div>
     `;
     div.addEventListener('click', () => selecionarCliente(c));
     listaModal.appendChild(div);
@@ -1160,7 +1312,7 @@ function carregarClientes() {
   // Modal Clientes - Lista
   const listaClientes = document.getElementById('container-clientes-lista');
   listaClientes.innerHTML = '';
-  db.clientes.forEach(c => {
+  db.clientes.filter(c => c.ativo !== false).forEach(c => {
     const div = document.createElement('div');
     div.style.padding = '10px';
     div.style.borderBottom = '1px solid #eee';
@@ -1168,7 +1320,9 @@ function carregarClientes() {
       <div style="font-weight:500">${c.nome}</div>
       <div style="font-size:12px; color:#7f8c8d;">
         <span class="badge badge-${c.tipo}">${c.tipo.toUpperCase()}</span> 
-        ${formatarDocumento(c.documento, c.tipo)}
+        ${formatarDocumento(c.documento, c.tipo)} | 
+        <span style="color:#25D366;">${formatarTelefone(c.whatsapp)}</span>
+        ${c.email ? ` | ${c.email}` : ''}
       </div>
     `;
     listaClientes.appendChild(div);
@@ -1180,7 +1334,11 @@ function selecionarCliente(cliente) {
   document.getElementById('cliente-selecionado').innerHTML = `
     <div class="client-selected">
       <div class="name">${cliente.nome}</div>
-      <div class="doc"><span class="badge badge-${cliente.tipo}">${cliente.tipo.toUpperCase()}</span> ${formatarDocumento(cliente.documento, cliente.tipo)}</div>
+      <div class="doc">
+        <span class="badge badge-${cliente.tipo}">${cliente.tipo.toUpperCase()}</span> 
+        ${formatarDocumento(cliente.documento, cliente.tipo)} | 
+        <span style="color:#25D366;">${formatarTelefone(cliente.whatsapp)}</span>
+      </div>
     </div>
   `;
   fecharModal('modal-selecionar-cliente');
@@ -1210,13 +1368,13 @@ function atualizarCarrinho() {
   let html = '';
   let subtotal = 0;
   carrinho.forEach(item => {
-    const totalItem = item.quantidade * item.preco;
+    const totalItem = item.quantidade * item.preco_venda;
     subtotal += totalItem;
     html += `
       <div class="cart-item">
         <div class="desc">${item.descricao}</div>
         <div class="qty">${item.quantidade}x</div>
-        <div class="price">${formatarMoeda(item.preco)}</div>
+        <div class="price">${formatarMoeda(item.preco_venda)}</div>
       </div>
     `;
   });
@@ -1240,15 +1398,28 @@ function atualizarCarrinho() {
 }
 
 function adicionarAoCarrinho(produto) {
+  // Verificar estoque
+  if (produto.quantidade <= 0) {
+    mostrarNotificacao('⚠️ Produto sem estoque!', 'error');
+    return;
+  }
+  
   const existente = carrinho.find(i => i.produto_id === produto.id);
   if (existente) {
+    // Verificar se há estoque suficiente
+    if (existente.quantidade >= produto.quantidade) {
+      mostrarNotificacao(`⚠️ Estoque insuficiente! Máximo: ${produto.quantidade}`, 'error');
+      return;
+    }
     existente.quantidade += 1;
   } else {
     carrinho.push({
       produto_id: produto.id,
       descricao: produto.descricao,
       quantidade: 1,
-      preco: produto.preco_venda
+      preco_custo: produto.preco_custo,
+      preco_venda: produto.preco_venda,
+      fornecedor: produto.fornecedor
     });
   }
   atualizarCarrinho();
@@ -1290,7 +1461,7 @@ function atualizarTroco() {
   if (formaPagamento !== 'money') return;
   
   const valorRecebido = parseFloat(document.getElementById('valor-recebido').value) || 0;
-  const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco), 0);
+  const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco_venda), 0);
   const troco = valorRecebido - total;
   
   document.getElementById('troco-valor').textContent = formatarMoeda(troco);
@@ -1307,14 +1478,13 @@ document.getElementById('barcode-input').addEventListener('keypress', (e) => {
       const db = buscarDados();
       const produto = db.produtos.find(p => 
         (p.codigo_barra && p.codigo_barra === codigo) || 
-        (p.codigo && p.codigo === codigo) ||
-        p.descricao.toLowerCase().includes(codigo.toLowerCase())
+        (p.descricao.toLowerCase().includes(codigo.toLowerCase()))
       );
       
-      if (produto && produto.ativo !== false) {
+      if (produto && produto.ativo !== false && produto.quantidade > 0) {
         adicionarAoCarrinho(produto);
       } else {
-        mostrarNotificacao('❌ Produto não encontrado!', 'error');
+        mostrarNotificacao('❌ Produto não encontrado ou sem estoque!', 'error');
       }
       
       document.getElementById('barcode-input').value = '';
@@ -1340,15 +1510,14 @@ function abrirScanner() {
         const db = buscarDados();
         const produto = db.produtos.find(p => 
           (p.codigo_barra && p.codigo_barra === decodedText.trim()) || 
-          (p.codigo && p.codigo === decodedText.trim()) ||
-          p.descricao.toLowerCase().includes(decodedText.trim().toLowerCase())
+          (p.descricao.toLowerCase().includes(decodedText.trim().toLowerCase()))
         );
         
-        if (produto && produto.ativo !== false) {
+        if (produto && produto.ativo !== false && produto.quantidade > 0) {
           adicionarAoCarrinho(produto);
           mostrarNotificacao(`✅ ${produto.descricao} adicionado!`, 'success');
         } else {
-          mostrarNotificacao('❌ Produto não encontrado!', 'error');
+          mostrarNotificacao('❌ Produto não encontrado ou sem estoque!', 'error');
         }
       }).catch(err => console.error("Erro ao parar scanner:", err));
     },
@@ -1400,6 +1569,25 @@ document.getElementById('btn-criar-backup').addEventListener('click', () => {
   
   mostrarNotificacao('✅ Backup criado com sucesso!', 'success');
   atualizarListaBackups();
+});
+
+document.getElementById('btn-download-backup').addEventListener('click', () => {
+  const db = buscarDados();
+  const backup = {
+    data: new Date().toISOString(),
+    sistema: 'Sistema de Vendas - Armarinho',
+    dados: db
+  };
+  
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-armarinho-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  mostrarNotificacao('✅ Backup baixado com sucesso!', 'success');
 });
 
 function atualizarListaBackups() {
@@ -1520,6 +1708,7 @@ document.getElementById('btn-gerar-zreport').addEventListener('click', () => {
               <div><strong>Cupom #${v.id}</strong> - ${new Date(v.data).toLocaleString('pt-BR')}</div>
               <div>Total: ${formatarMoeda(v.total)}</div>
               <div>Itens: ${v.itens.length}</div>
+              <div>Cliente: ${v.cliente_id ? db.clientes.find(c => c.id === v.cliente_id)?.nome || 'Não informado' : 'Não informado'}</div>
             </div>
           `).join('')}
         </div>
@@ -1563,12 +1752,26 @@ document.getElementById('btn-fechar-clientes').addEventListener('click', () => {
 document.getElementById('btn-salvar-cliente').addEventListener('click', () => {
   const nome = document.getElementById('cliente-nome').value.trim();
   const tipo = document.getElementById('cliente-tipo').value;
-  const documento = document.getElementById('cliente-documento').value.trim();
-  const telefone = document.getElementById('cliente-telefone').value.trim();
+  const documento = document.getElementById('cliente-documento').value.trim().replace(/\D/g, '');
+  const whatsapp = document.getElementById('cliente-whatsapp').value.trim().replace(/\D/g, '');
+  const telefone = document.getElementById('cliente-telefone').value.trim().replace(/\D/g, '');
   const email = document.getElementById('cliente-email').value.trim();
+  const endereco = document.getElementById('cliente-endereco').value.trim();
   
-  if (!nome || !documento) {
-    mostrarNotificacao('⚠️ Preencha nome e documento!', 'error');
+  if (!nome || !documento || !whatsapp) {
+    mostrarNotificacao('⚠️ Preencha nome, CPF/CNPJ e WhatsApp!', 'error');
+    return;
+  }
+  
+  // Validar CPF/CNPJ
+  if ((tipo === 'cpf' && documento.length !== 11) || (tipo === 'cnpj' && documento.length !== 14)) {
+    mostrarNotificacao(`⚠️ ${tipo.toUpperCase()} inválido!`, 'error');
+    return;
+  }
+  
+  // Validar WhatsApp
+  if (whatsapp.length < 10 || whatsapp.length > 11) {
+    mostrarNotificacao('⚠️ WhatsApp inválido!', 'error');
     return;
   }
   
@@ -1580,18 +1783,53 @@ document.getElementById('btn-salvar-cliente').addEventListener('click', () => {
     nome,
     tipo,
     documento,
-    telefone,
-    email,
+    whatsapp,
+    telefone: telefone || '',
+    email: email || '',
+    endereco: endereco || '',
     ativo: true
   });
   
   salvarDados(db);
   mostrarNotificacao('✅ Cliente cadastrado com sucesso!', 'success');
+  
+  // Limpar formulário
   document.getElementById('cliente-nome').value = '';
   document.getElementById('cliente-documento').value = '';
+  document.getElementById('cliente-whatsapp').value = '';
   document.getElementById('cliente-telefone').value = '';
   document.getElementById('cliente-email').value = '';
+  document.getElementById('cliente-endereco').value = '';
+  
   carregarClientes();
+});
+
+// Busca de clientes
+document.getElementById('busca-clientes-lista').addEventListener('input', (e) => {
+  const termo = e.target.value.toLowerCase();
+  const db = buscarDados();
+  const lista = document.getElementById('container-clientes-lista');
+  lista.innerHTML = '';
+  
+  db.clientes.filter(c => c.ativo !== false && 
+    (c.nome.toLowerCase().includes(termo) || 
+     c.documento.includes(termo.replace(/\D/g, '')) ||
+     c.whatsapp.includes(termo.replace(/\D/g, ''))))
+  .forEach(c => {
+    const div = document.createElement('div');
+    div.style.padding = '10px';
+    div.style.borderBottom = '1px solid #eee';
+    div.innerHTML = `
+      <div style="font-weight:500">${c.nome}</div>
+      <div style="font-size:12px; color:#7f8c8d;">
+        <span class="badge badge-${c.tipo}">${c.tipo.toUpperCase()}</span> 
+        ${formatarDocumento(c.documento, c.tipo)} | 
+        <span style="color:#25D366;">${formatarTelefone(c.whatsapp)}</span>
+        ${c.email ? ` | ${c.email}` : ''}
+      </div>
+    `;
+    lista.appendChild(div);
+  });
 });
 
 // ========== MODAL PRODUTOS ==========
@@ -1605,14 +1843,25 @@ document.getElementById('btn-fechar-produtos').addEventListener('click', () => {
 });
 
 document.getElementById('btn-salvar-produto').addEventListener('click', () => {
-  const codigo = document.getElementById('produto-codigo').value.trim();
+  const fornecedor = document.getElementById('produto-fornecedor').value.trim();
   const codigoBarra = document.getElementById('produto-codigo-barra').value.trim();
   const descricao = document.getElementById('produto-descricao').value.trim();
-  const preco = parseFloat(document.getElementById('produto-preco').value);
-  const estoque = parseInt(document.getElementById('produto-estoque').value) || 0;
+  const quantidade = parseInt(document.getElementById('produto-quantidade').value) || 0;
+  const precoCusto = parseFloat(document.getElementById('produto-preco-custo').value);
+  const precoVenda = parseFloat(document.getElementById('produto-preco-venda').value);
   
-  if (!descricao || isNaN(preco)) {
-    mostrarNotificacao('⚠️ Preencha descrição e preço!', 'error');
+  if (!fornecedor || !descricao || isNaN(precoCusto) || isNaN(precoVenda)) {
+    mostrarNotificacao('⚠️ Preencha fornecedor, produto, preço de custo e venda!', 'error');
+    return;
+  }
+  
+  if (precoCusto <= 0 || precoVenda <= 0) {
+    mostrarNotificacao('⚠️ Preços devem ser maiores que zero!', 'error');
+    return;
+  }
+  
+  if (precoVenda < precoCusto) {
+    mostrarNotificacao('⚠️ Preço de venda deve ser maior ou igual ao custo!', 'error');
     return;
   }
   
@@ -1621,21 +1870,26 @@ document.getElementById('btn-salvar-produto').addEventListener('click', () => {
   
   db.produtos.push({
     id: db.config.ultimoIdProduto,
-    codigo: codigo || String(db.config.ultimoIdProduto).padStart(3, '0'),
+    fornecedor,
     codigo_barra: codigoBarra || '',
     descricao,
-    preco_venda: preco,
-    estoque,
+    quantidade,
+    preco_custo: precoCusto,
+    preco_venda: precoVenda,
     ativo: true
   });
   
   salvarDados(db);
   mostrarNotificacao('✅ Produto cadastrado com sucesso!', 'success');
-  document.getElementById('produto-codigo').value = '';
+  
+  // Limpar formulário
+  document.getElementById('produto-fornecedor').value = '';
   document.getElementById('produto-codigo-barra').value = '';
   document.getElementById('produto-descricao').value = '';
-  document.getElementById('produto-preco').value = '';
-  document.getElementById('produto-estoque').value = '0';
+  document.getElementById('produto-quantidade').value = '0';
+  document.getElementById('produto-preco-custo').value = '';
+  document.getElementById('produto-preco-venda').value = '';
+  
   carregarListaProdutos();
   carregarProdutos();
 });
@@ -1652,13 +1906,160 @@ function carregarListaProdutos() {
     div.innerHTML = `
       <div style="font-weight:500">${p.descricao}</div>
       <div style="display:flex; justify-content:space-between; font-size:12px; color:#7f8c8d; margin-top:5px;">
-        <span>Cód: ${p.codigo || 'N/A'}</span>
-        <span>${formatarMoeda(p.preco_venda)}</span>
-        <span>Estoque: ${p.estoque}</span>
+        <span>Fornecedor: ${p.fornecedor}</span>
+        <span>Custo: ${formatarMoeda(p.preco_custo)}</span>
+        <span>Venda: ${formatarMoeda(p.preco_venda)}</span>
+        <span>Estoque: ${p.quantidade}</span>
+      </div>
+      ${p.codigo_barra ? `<div style="font-size:11px; color:#95a5a6; margin-top:3px;">Cód. Barras: ${p.codigo_barra}</div>` : ''}
+    `;
+    lista.appendChild(div);
+  });
+}
+
+// Busca de produtos
+document.getElementById('busca-produtos-lista').addEventListener('input', (e) => {
+  const termo = e.target.value.toLowerCase();
+  const db = buscarDados();
+  const lista = document.getElementById('container-produtos-lista');
+  lista.innerHTML = '';
+  
+  db.produtos.filter(p => p.ativo !== false && 
+    (p.descricao.toLowerCase().includes(termo) || 
+     p.fornecedor.toLowerCase().includes(termo) ||
+     p.codigo_barra.includes(termo)))
+  .forEach(p => {
+    const div = document.createElement('div');
+    div.style.padding = '10px';
+    div.style.borderBottom = '1px solid #eee';
+    div.innerHTML = `
+      <div style="font-weight:500">${p.descricao}</div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:#7f8c8d; margin-top:5px;">
+        <span>Fornecedor: ${p.fornecedor}</span>
+        <span>Custo: ${formatarMoeda(p.preco_custo)}</span>
+        <span>Venda: ${formatarMoeda(p.preco_venda)}</span>
+        <span>Estoque: ${p.quantidade}</span>
+      </div>
+      ${p.codigo_barra ? `<div style="font-size:11px; color:#95a5a6; margin-top:3px;">Cód. Barras: ${p.codigo_barra}</div>` : ''}
+    `;
+    lista.appendChild(div);
+  });
+});
+
+// ========== ESTOQUE (ADMIN) ==========
+document.getElementById('btn-estoque').addEventListener('click', () => {
+  if (sessionStorage.getItem('user_perfil') !== 'admin') {
+    mostrarNotificacao('⚠️ Acesso restrito a administrador!', 'error');
+    return;
+  }
+  document.getElementById('modal-estoque').style.display = 'flex';
+  carregarEstoque();
+});
+
+document.getElementById('btn-fechar-estoque').addEventListener('click', () => {
+  document.getElementById('modal-estoque').style.display = 'none';
+});
+
+function carregarEstoque() {
+  const db = buscarDados();
+  const lista = document.getElementById('lista-estoque');
+  lista.innerHTML = '';
+  
+  db.produtos.filter(p => p.ativo !== false).sort((a, b) => a.quantidade - b.quantidade).forEach(p => {
+    // Determinar cor do badge baseado no estoque
+    let badgeClass = 'badge-stock-high';
+    if (p.quantidade <= 5) {
+      badgeClass = 'badge-stock-low';
+    } else if (p.quantidade <= 20) {
+      badgeClass = 'badge-stock-medium';
+    }
+    
+    const div = document.createElement('div');
+    div.className = 'stock-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="name">${p.descricao}</div>
+        <div class="details">
+          <span style="color:#7f8c8d;">${p.fornecedor}</span> | 
+          Custo: ${formatarMoeda(p.preco_custo)} | 
+          Venda: ${formatarMoeda(p.preco_venda)}
+          ${p.codigo_barra ? ` | Cód: ${p.codigo_barra}` : ''}
+        </div>
+      </div>
+      <div class="quantity">
+        <span class="badge ${badgeClass}">${p.quantidade} unid</span>
+      </div>
+      <div class="actions">
+        <button class="btn-sm edit" onclick="editarProduto(${p.id})">✏️ Editar</button>
       </div>
     `;
     lista.appendChild(div);
   });
+}
+
+// Busca no estoque
+document.getElementById('busca-estoque').addEventListener('input', (e) => {
+  const termo = e.target.value.toLowerCase();
+  const db = buscarDados();
+  const lista = document.getElementById('lista-estoque');
+  lista.innerHTML = '';
+  
+  db.produtos.filter(p => p.ativo !== false && 
+    (p.descricao.toLowerCase().includes(termo) || 
+     p.fornecedor.toLowerCase().includes(termo) ||
+     p.codigo_barra.includes(termo)))
+  .sort((a, b) => a.quantidade - b.quantidade)
+  .forEach(p => {
+    let badgeClass = 'badge-stock-high';
+    if (p.quantidade <= 5) {
+      badgeClass = 'badge-stock-low';
+    } else if (p.quantidade <= 20) {
+      badgeClass = 'badge-stock-medium';
+    }
+    
+    const div = document.createElement('div');
+    div.className = 'stock-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="name">${p.descricao}</div>
+        <div class="details">
+          <span style="color:#7f8c8d;">${p.fornecedor}</span> | 
+          Custo: ${formatarMoeda(p.preco_custo)} | 
+          Venda: ${formatarMoeda(p.preco_venda)}
+          ${p.codigo_barra ? ` | Cód: ${p.codigo_barra}` : ''}
+        </div>
+      </div>
+      <div class="quantity">
+        <span class="badge ${badgeClass}">${p.quantidade} unid</span>
+      </div>
+      <div class="actions">
+        <button class="btn-sm edit" onclick="editarProduto(${p.id})">✏️ Editar</button>
+      </div>
+    `;
+    lista.appendChild(div);
+  });
+});
+
+function editarProduto(id) {
+  const db = buscarDados();
+  const produto = db.produtos.find(p => p.id === id);
+  
+  if (!produto) return;
+  
+  const novaQuantidade = prompt(`Editar estoque de "${produto.descricao}"\nEstoque atual: ${produto.quantidade}\nDigite a nova quantidade:`, produto.quantidade);
+  
+  if (novaQuantidade !== null && !isNaN(novaQuantidade)) {
+    const qtd = parseInt(novaQuantidade);
+    if (qtd >= 0) {
+      produto.quantidade = qtd;
+      salvarDados(db);
+      carregarEstoque();
+      carregarProdutos();
+      mostrarNotificacao('✅ Estoque atualizado com sucesso!', 'success');
+    } else {
+      mostrarNotificacao('⚠️ Quantidade deve ser maior ou igual a zero!', 'error');
+    }
+  }
 }
 
 // ========== SANGRIA ==========
@@ -1719,25 +2120,39 @@ document.getElementById('btn-finalizar').addEventListener('click', () => {
     return;
   }
   
-  const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco), 0);
+  // Verificar estoque antes de finalizar
+  const db = buscarDados();
+  for (const item of carrinho) {
+    const produto = db.produtos.find(p => p.id === item.produto_id);
+    if (!produto || produto.quantidade < item.quantidade) {
+      mostrarNotificacao(`⚠️ Estoque insuficiente para ${item.descricao}!`, 'error');
+      return;
+    }
+  }
+  
+  const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco_venda), 0);
   
   // Gerar cupom
   const cupomHTML = `
     <div style="font-family: 'Courier New', monospace; font-size:12px;">
       <div style="text-align:center; border-bottom:2px dashed #000; padding-bottom:10px; margin-bottom:10px;">
-        <div style="font-weight:bold; font-size:16px;">${buscarDados().config.nomeEmpresa}</div>
-        <div style="font-size:11px;">${buscarDados().config.cnpjEmpresa}</div>
-        <div style="font-size:10px;">${buscarDados().config.enderecoEmpresa}</div>
-        <div style="font-size:10px;">${buscarDados().config.telefoneEmpresa}</div>
+        <div style="font-weight:bold; font-size:16px;">${db.config.nomeEmpresa}</div>
+        <div style="font-size:11px;">${db.config.cnpjEmpresa}</div>
+        <div style="font-size:10px;">${db.config.enderecoEmpresa}</div>
+        <div style="font-size:10px;">${db.config.telefoneEmpresa}</div>
       </div>
       
       <div style="margin-bottom:10px;">
-        <div><strong>Cupom:</strong> #${buscarDados().config.ultimoIdVenda + 1}</div>
+        <div><strong>Cupom:</strong> #${db.config.ultimoIdVenda + 1}</div>
         <div><strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}</div>
         ${clienteSelecionado ? `
           <div style="margin-top:5px; padding:5px; background:#f0f0f0; border-radius:3px;">
             <div><strong>Cliente:</strong> ${clienteSelecionado.nome}</div>
-            <div><span class="badge badge-${clienteSelecionado.tipo}">${clienteSelecionado.tipo.toUpperCase()}</span> ${formatarDocumento(clienteSelecionado.documento, clienteSelecionado.tipo)}</div>
+            <div>
+              <span class="badge badge-${clienteSelecionado.tipo}">${clienteSelecionado.tipo.toUpperCase()}</span> 
+              ${formatarDocumento(clienteSelecionado.documento, clienteSelecionado.tipo)} | 
+              <span style="color:#25D366;">${formatarTelefone(clienteSelecionado.whatsapp)}</span>
+            </div>
           </div>
         ` : ''}
       </div>
@@ -1747,7 +2162,7 @@ document.getElementById('btn-finalizar').addEventListener('click', () => {
           <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
             <span style="flex:2;">${item.descricao}</span>
             <span style="flex:1; text-align:right;">${item.quantidade}x</span>
-            <span style="flex:1; text-align:right;">${formatarMoeda(item.preco)}</span>
+            <span style="flex:1; text-align:right;">${formatarMoeda(item.preco_venda)}</span>
           </div>
         `).join('')}
       </div>
@@ -1780,8 +2195,14 @@ document.getElementById('btn-finalizar').addEventListener('click', () => {
   document.getElementById('cupom-container').innerHTML = cupomHTML;
   document.getElementById('modal-cupom').style.display = 'flex';
   
-  // Salvar venda
-  const db = buscarDados();
+  // Atualizar estoque e salvar venda
+  carrinho.forEach(item => {
+    const produto = db.produtos.find(p => p.id === item.produto_id);
+    if (produto) {
+      produto.quantidade -= item.quantidade;
+    }
+  });
+  
   db.config.ultimoIdVenda++;
   
   db.vendas.push({
@@ -1792,7 +2213,9 @@ document.getElementById('btn-finalizar').addEventListener('click', () => {
       produto_id: item.produto_id,
       descricao: item.descricao,
       quantidade: item.quantidade,
-      preco: item.preco
+      preco_custo: item.preco_custo,
+      preco_venda: item.preco_venda,
+      fornecedor: item.fornecedor
     })),
     total: total,
     forma_pagamento: formaPagamento,
@@ -1841,6 +2264,11 @@ window.addEventListener('click', (e) => {
   }
 });
 
+// Função auxiliar para fechar modal
+function fecharModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
 // ========== INICIALIZAÇÃO ==========
 inicializarDados();
 
@@ -1848,6 +2276,12 @@ if (sessionStorage.getItem('user_id')) {
   document.getElementById('user-name').textContent = sessionStorage.getItem('user_nome');
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-vendas').style.display = 'block';
+  
+  // Mostrar botão de estoque só para admin
+  if (sessionStorage.getItem('user_perfil') === 'admin') {
+    document.getElementById('btn-estoque').style.display = 'block';
+  }
+  
   carregarProdutos();
   carregarClientes();
 }
