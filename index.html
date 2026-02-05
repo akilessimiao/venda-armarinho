@@ -4,10 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🛒 Sistema de Vendas Completo</title>
-
-<!-- 🔴 BIBLIOTECA PARA SCANNER DE CÂMERA -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
 <style>
 :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --warning: #f39c12; --dark: #2c3e50; --light: #ecf0f1; --backup: #9b59b6; --zreport: #34495e; --whatsapp: #25D366; --barcode: #9b59b6; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -171,7 +168,7 @@ body { background: white; }
 .sidebar { width: 100%; height: auto; max-height: 40%; }
 .actions { flex-direction: column; }
 }
-/* 🔴 ESTILOS PARA O SCANNER DE CÂMERA */
+/* Estilo para o modal do scanner */
 #scanner-modal {
 display: none;
 position: fixed;
@@ -224,6 +221,22 @@ box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 background: #b91c1c;
 transform: translateY(-2px);
 }
+/* Estilo para o dropdown de login */
+.user-select {
+width: 100%;
+padding: 14px;
+border: 2px solid #ddd;
+border-radius: 8px;
+font-size: 16px;
+background: white;
+cursor: pointer;
+margin-bottom: 15px;
+}
+.user-select:focus {
+border-color: var(--primary);
+outline: none;
+box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
 </style>
 </head>
 <body>
@@ -235,23 +248,20 @@ transform: translateY(-2px);
 </div>
 <div id="error-login" class="error"></div>
 <div class="form-group">
-<label for="login-user">Usuário</label>
-<input type="text" id="login-user" placeholder="admin ou operador" required autofocus>
+<label for="login-user">👤 Selecione o Usuário</label>
+<select id="login-user" class="user-select">
+<option value="">----------</option>
+<option value="admin">👑 Administrador</option>
+<option value="operador">👤 Operador</option>
+</select>
 </div>
 <div class="form-group">
-<label for="login-pass">Senha</label>
-<input type="password" id="login-pass" placeholder="Senha" required>
+<label for="login-pass">🔑 Senha</label>
+<input type="password" id="login-pass" placeholder="Digite sua senha" required>
 </div>
-<button class="btn btn-primary" id="btn-login" style="width:100%">Entrar</button>
+<button class="btn btn-primary" id="btn-login" style="width:100%">🔐 Entrar</button>
 <div class="footer" style="margin-top:25px;">
-<p>🔐 Admin: admin / Senha</p>
-<p>👤 Operador: operador / operador123</p>
-<p style="margin-top:15px; font-size:12px; color:#9b59b6;">
-💾 Backup automático • 🔒 Proteção por senha • 📄 Cupom fiscal
-</p>
-<p style="margin-top:10px; font-size:12px; color:#25D366;">
-💬 WhatsApp auto • 📱 Leitor de código de barras
-</p>
+<p style="color: #9b59b6; font-weight: bold;">💡 Dica: Selecione o usuário e digite a senha!</p>
 </div>
 </div>
 </div>
@@ -275,7 +285,7 @@ transform: translateY(-2px);
 </div>
 <div class="container">
 <div class="sidebar">
-<!-- 🔴 BOTÃO PARA ABRIR SCANNER DE CÂMERA -->
+<!-- Botão Scanner de Câmera -->
 <div style="text-align: center; margin: 15px 0;">
 <button class="btn-barcode-modal" onclick="abrirScanner()">
 📷 📱 Ler Código com Câmera
@@ -375,7 +385,7 @@ transform: translateY(-2px);
 </div>
 </div>
 </div>
-<!-- 🔴 MODAL DO SCANNER DE CÂMERA -->
+<!-- Modal Scanner de Câmera -->
 <div id="scanner-modal">
 <div class="scanner-header">
 📱 Aponte a câmera para o código de barras
@@ -663,7 +673,7 @@ Seus dados são salvos automaticamente no navegador. Backup automático diário 
 <h3>💰 Sangria de Caixa</h3>
 <input type="number" id="valor-sangria" placeholder="Valor da sangria (ex: 50.00)" step="0.01" min="0.01">
 <input type="text" id="especificacao-sangria" placeholder="Especificação (opcional)">
-<input type="password" id="senha-admin-sangria" placeholder="Senha de Administrador (********)">
+<input type="password" id="senha-admin-sangria" placeholder="Senha de Administrador (java1814)">
 <div class="modal-buttons">
 <button class="btn btn-danger" id="btn-confirmar-sangria" style="flex:1">Confirmar Sangria</button>
 <button class="btn" id="btn-cancelar-sangria" style="flex:1; background:#95a5a6; color:white">Cancelar</button>
@@ -694,7 +704,7 @@ Seus dados são salvos automaticamente no navegador. Backup automático diário 
 <div class="modal-content">
 <h3>🔐 Confirmação de Administrador</h3>
 <p>Para realizar esta ação, insira a senha de administrador:</p>
-<input type="password" id="senha-admin-input" placeholder="Senha de Administrador (********)" style="margin-top: 15px;">
+<input type="password" id="senha-admin-input" placeholder="Senha de Administrador (java1814)" style="margin-top: 15px;">
 <div class="modal-buttons">
 <button class="btn" id="btn-cancelar-senha" style="flex:1; background:#95a5a6; color:white">Cancelar</button>
 <button class="btn btn-danger" id="btn-confirmar-senha" style="flex:1;">Confirmar</button>
@@ -792,111 +802,24 @@ console.error('Erro ao salvar dados:', e);
 alert('⚠️ Erro ao salvar dados. O armazenamento local pode estar cheio ou bloqueado.');
 }
 }
-// ========== 🔴 LEITOR DE CÓDIGO DE BARRAS ==========
-let html5QrcodeScanner = null;
-// Leitora Física (USB - Keyboard Wedge)
-document.addEventListener('DOMContentLoaded', () => {
-const barcodeInput = document.getElementById('barcode-input');
-if (barcodeInput) {
-barcodeInput.addEventListener('keypress', (e) => {
-if (e.key === 'Enter') {
-e.preventDefault();
-const codigo = barcodeInput.value.trim();
-if (codigo) {
-processarCodigoEscaneado(codigo);
-barcodeInput.value = '';
-barcodeInput.focus();
-}
-}
-});
-// Manter foco no campo
-setInterval(() => {
-if (document.activeElement !== barcodeInput && 
-document.getElementById('screen-vendas').style.display !== 'none') {
-barcodeInput.focus();
-}
-}, 1000);
-}
-});
-// Scanner de Câmera (Celular/Notebook)
-function abrirScanner() {
-document.getElementById('scanner-modal').classList.add('active');
-// Inicializa o scanner
-html5QrcodeScanner = new Html5Qrcode("reader");
-html5QrcodeScanner.start(
-{ facingMode: "environment" }, // Câmera traseira
-{
-fps: 10,
-qrbox: { width: 250, height: 250 }
-},
-onScanSuccess,
-onScanFailure
-).catch(err => {
-console.error("Erro ao iniciar scanner:", err);
-mostrarNotificacao('❌ Erro ao acessar câmera. Verifique as permissões.', 'error');
-document.getElementById('scanner-modal').classList.remove('active');
-});
-}
-function fecharScanner() {
-if (html5QrcodeScanner) {
-html5QrcodeScanner.stop().then(() => {
-document.getElementById('scanner-modal').classList.remove('active');
-}).catch(err => {
-console.error("Erro ao parar scanner:", err);
-});
-}
-}
-function onScanSuccess(decodedText) {
-if (html5QrcodeScanner && html5QrcodeScanner.getState() === Html5QrcodeScannerState.SCANNING) {
-html5QrcodeScanner.stop().then(() => {
-document.getElementById('scanner-modal').classList.remove('active');
-processarCodigoEscaneado(decodedText);
-}).catch(err => {
-console.error("Erro ao parar scanner:", err);
-});
-}
-}
-function onScanFailure(message) {
-// Não faz nada - evita spam de erros
-}
-function processarCodigoEscaneado(codigo) {
-const codigoLimpo = codigo.trim();
-if (!codigoLimpo) return;
-const db = buscarDados();
-if (!db) {
-mostrarNotificacao('❌ Erro ao carregar dados!', 'error');
-return;
-}
-// Buscar produto pelo código de barras, código ou descrição
-const produto = db.produtos.find(p => 
-(p.codigo_barra && p.codigo_barra === codigoLimpo) || 
-(p.codigo && p.codigo === codigoLimpo) ||
-p.descricao.toLowerCase().includes(codigoLimpo.toLowerCase())
-);
-if (produto && produto.ativo !== false) {
-adicionarAoCarrinho(produto);
-mostrarNotificacao(`✅ ${produto.descricao} adicionado ao carrinho!`, 'success');
-} else {
-mostrarNotificacao('❌ Produto não encontrado!', 'error');
-}
-}
-// Fechar scanner ao pressionar ESC
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') {
-fecharScanner();
-}
-});
-// ========== AUTENTICAÇÃO ==========
+// ========== LOGIN ==========
 document.getElementById('btn-login').addEventListener('click', () => {
-const usuario = document.getElementById('login-user').value.trim();
+const usuario = document.getElementById('login-user').value;
 const senha = document.getElementById('login-pass').value;
 const errorDiv = document.getElementById('error-login');
-const db = buscarDados();
-if (!db) {
-errorDiv.textContent = 'Erro ao carregar banco de dados!';
+// Validar seleção de usuário
+if (!usuario) {
+errorDiv.textContent = '⚠️ Selecione um usuário!';
 errorDiv.style.display = 'block';
 return;
 }
+// Validar senha
+if (!senha) {
+errorDiv.textContent = '⚠️ Digite a senha!';
+errorDiv.style.display = 'block';
+return;
+}
+const db = buscarDados();
 const user = db.usuarios.find(u => u.login === usuario && u.senha === senha && u.ativo !== false);
 if (user) {
 sessionStorage.setItem('user_id', user.id);
@@ -909,8 +832,14 @@ carregarProdutos();
 atualizarStatusBackup();
 errorDiv.style.display = 'none';
 } else {
-errorDiv.textContent = 'Usuário ou senha inválidos!';
+errorDiv.textContent = '❌ Usuário ou senha inválidos!';
 errorDiv.style.display = 'block';
+}
+});
+// Enter no campo de senha também faz login
+document.getElementById('login-pass').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') {
+document.getElementById('btn-login').click();
 }
 });
 document.getElementById('btn-logout').addEventListener('click', () => {
@@ -1003,8 +932,7 @@ preco: produto.preco_venda
 }
 atualizarCarrinho();
 document.getElementById('busca-produto').value = '';
-const barcodeInput = document.getElementById('barcode-input');
-if (barcodeInput) barcodeInput.value = '';
+document.getElementById('barcode-input').value = '';
 }
 // ========== FORMAS DE PAGAMENTO ==========
 document.querySelectorAll('.payment-option').forEach(option => {
@@ -1034,6 +962,85 @@ const troco = valorRecebido - total;
 document.getElementById('troco-valor').textContent = formatarMoeda(troco);
 }
 document.getElementById('valor-recebido').addEventListener('input', atualizarTroco);
+// ========== LEITOR DE CÓDIGO DE BARRAS ==========
+document.getElementById('barcode-input').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') {
+e.preventDefault();
+const codigo = document.getElementById('barcode-input').value.trim();
+if (codigo) {
+const db = buscarDados();
+if (!db) return;
+const produto = db.produtos.find(p =>
+(p.codigo_barra && p.codigo_barra === codigo) ||
+(p.codigo && p.codigo === codigo) ||
+p.descricao.toLowerCase().includes(codigo.toLowerCase())
+);
+if (produto && produto.ativo !== false) {
+adicionarAoCarrinho(produto);
+mostrarNotificacao(`✅ ${produto.descricao} adicionado ao carrinho!`, 'success');
+} else {
+mostrarNotificacao('❌ Produto não encontrado!', 'error');
+}
+document.getElementById('barcode-input').value = '';
+}
+}
+});
+// ========== SCANNER DE CÂMERA ==========
+let html5QrcodeScanner = null;
+function abrirScanner() {
+document.getElementById('scanner-modal').classList.add('active');
+// Inicializa o scanner
+html5QrcodeScanner = new Html5Qrcode("reader");
+html5QrcodeScanner.start(
+{ facingMode: "environment" }, // Câmera traseira
+{
+fps: 10,
+qrbox: { width: 250, height: 250 }
+},
+(decodedText) => {
+// Parar scanner após encontrar o código
+html5QrcodeScanner.stop().then(() => {
+document.getElementById('scanner-modal').classList.remove('active');
+const codigoLimpo = decodedText.trim();
+if (codigoLimpo) {
+const db = buscarDados();
+if (!db) {
+mostrarNotificacao('❌ Erro ao carregar dados!', 'error');
+return;
+}
+// Buscar produto pelo código de barras, código ou descrição
+const produto = db.produtos.find(p => 
+(p.codigo_barra && p.codigo_barra === codigoLimpo) || 
+(p.codigo && p.codigo === codigoLimpo) ||
+p.descricao.toLowerCase().includes(codigoLimpo.toLowerCase())
+);
+if (produto && produto.ativo !== false) {
+adicionarAoCarrinho(produto);
+mostrarNotificacao(`✅ ${produto.descricao} adicionado ao carrinho!`, 'success');
+} else {
+mostrarNotificacao('❌ Produto não encontrado!', 'error');
+}
+}
+}).catch(err => {
+console.error("Erro ao parar scanner:", err);
+});
+},
+(err) => {}
+).catch(err => {
+console.error("Erro ao iniciar scanner:", err);
+mostrarNotificacao('❌ Erro ao acessar câmera!', 'error');
+document.getElementById('scanner-modal').classList.remove('active');
+});
+}
+function fecharScanner() {
+if (html5QrcodeScanner) {
+html5QrcodeScanner.stop().then(() => {
+document.getElementById('scanner-modal').classList.remove('active');
+}).catch(err => {
+console.error("Erro ao parar scanner:", err);
+});
+}
+}
 // ========== SISTEMA DE BACKUP (Simplificado) ==========
 function atualizarStatusBackup() {
 try {
@@ -1076,19 +1083,10 @@ document.getElementById('screen-vendas').style.display = 'block';
 carregarProdutos();
 atualizarStatusBackup();
 }
-// Mensagem de boas-vindas
-setTimeout(() => {
-if (document.getElementById('screen-login').style.display !== 'none') {
-alert('👋 Sistema de Vendas Completo iniciado!
-✅ Login: admin / senha 
-✅ Formas de pagamento com cálculo de troco
-✅ Leitora de código de barras (USB)
-✅ Scanner de câmera (celular)
-✅ Cupom para WhatsApp
-✅ Backup automático
-💡 Dica: Use F2 para buscar produtos!');
-}
-}, 500);
+// Foco automático no campo de senha quando usuário é selecionado
+document.getElementById('login-user').addEventListener('change', () => {
+document.getElementById('login-pass').focus();
+});
 </script>
 </body>
 </html>
