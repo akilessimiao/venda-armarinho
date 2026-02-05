@@ -707,782 +707,58 @@
   <script>
     // ========== DADOS INICIAIS (localStorage) ==========
     function inicializarDados() {
-      if (!localStorage.getItem('vendas_db')) {
-        localStorage.setItem('vendas_db', JSON.stringify({
-          usuarios: [
-            { id: 1, nome: 'Administrador', login: 'admin', senha: 'java1814', perfil: 'admin', whatsapp: '+5584999999999' },
-            { id: 2, nome: 'Operador', login: 'operador', senha: 'operador123', perfil: 'operador' }
-          ],
-          produtos: [
-            { id: 1, codigo: '001', codigo_barra: '7891234567890', descricao: 'Botão de Madeira', preco_venda: 5.0, estoque: 120, ativo: true },
-            { id: 2, codigo: '002', codigo_barra: '7891234567891', descricao: 'Linha de Algodão', preco_venda: 8.5, estoque: 85, ativo: true },
-            { id: 3, codigo: '003', codigo_barra: '7891234567892', descricao: 'Agulha de Costura', preco_venda: 3.2, estoque: 200, ativo: true },
-            { id: 4, codigo: '004', codigo_barra: '7891234567893', descricao: 'Fita Métrica', preco_venda: 12.0, estoque: 50, ativo: true },
-            { id: 5, codigo: '005', codigo_barra: '7891234567894', descricao: 'Tesoura Profissional', preco_venda: 25.0, estoque: 30, ativo: true }
-          ],
-          clientes: [
-            { id: 1, nome: 'Maria Silva', tipo: 'cpf', documento: '12345678901', telefone: '84999999999', email: 'maria@email.com' },
-            { id: 2, nome: 'João Santos', tipo: 'cpf', documento: '98765432109', telefone: '84888888888', email: 'joao@email.com' },
-            { id: 3, nome: 'Confecção LTDA', tipo: 'cnpj', documento: '12345678000190', telefone: '8433333333', email: 'contato@confeccao.com.br' }
-          ],
-          vendas: [],
-          movimentacoes: [],
-          config: { 
-            ultimoIdProduto: 5, 
-            ultimoIdCliente: 3, 
-            ultimoIdVenda: 0,
-            nomeEmpresa: 'Armarinho do Zé',
-            cnpjEmpresa: '12.345.678/0001-90',
-            enderecoEmpresa: 'Rua das Flores, 123 - Centro',
-            telefoneEmpresa: '(84) 3333-4444',
-            whatsappAdmin: '+5584999999999' // Número do admin para receber cupons
-          }
-        }));
-      }
-      
-      // Inicializar configurações de backup
-      if (!localStorage.getItem('backup_config')) {
-        localStorage.setItem('backup_config', JSON.stringify({
-          auto: 'diario',
-          hora: '23:00',
-          maxBackups: 10,
-          ultimoBackup: null,
-          backups: []
-        }));
+      try {
+        // Inicializar banco de dados
+        if (!localStorage.getItem('vendas_db')) {
+          const dbInicial = {
+            usuarios: [
+              { id: 1, nome: 'Administrador', login: 'admin', senha: 'java1814', perfil: 'admin', whatsapp: '+5584999999999' },
+              { id: 2, nome: 'Operador', login: 'operador', senha: 'operador123', perfil: 'operador' }
+            ],
+            produtos: [
+              { id: 1, codigo: '001', codigo_barra: '7891234567890', descricao: 'Botão de Madeira', preco_venda: 5.0, estoque: 120, ativo: true },
+              { id: 2, codigo: '002', codigo_barra: '7891234567891', descricao: 'Linha de Algodão', preco_venda: 8.5, estoque: 85, ativo: true },
+              { id: 3, codigo: '003', codigo_barra: '7891234567892', descricao: 'Agulha de Costura', preco_venda: 3.2, estoque: 200, ativo: true },
+              { id: 4, codigo: '004', codigo_barra: '7891234567893', descricao: 'Fita Métrica', preco_venda: 12.0, estoque: 50, ativo: true },
+              { id: 5, codigo: '005', codigo_barra: '7891234567894', descricao: 'Tesoura Profissional', preco_venda: 25.0, estoque: 30, ativo: true }
+            ],
+            clientes: [
+              { id: 1, nome: 'Maria Silva', tipo: 'cpf', documento: '12345678901', telefone: '84999999999', email: 'maria@email.com' },
+              { id: 2, nome: 'João Santos', tipo: 'cpf', documento: '98765432109', telefone: '84888888888', email: 'joao@email.com' },
+              { id: 3, nome: 'Confecção LTDA', tipo: 'cnpj', documento: '12345678000190', telefone: '8433333333', email: 'contato@confeccao.com.br' }
+            ],
+            vendas: [],
+            movimentacoes: [],
+            config: { 
+              ultimoIdProduto: 5, 
+              ultimoIdCliente: 3, 
+              ultimoIdVenda: 0,
+              nomeEmpresa: 'Armarinho do Zé',
+              cnpjEmpresa: '12.345.678/0001-90',
+              enderecoEmpresa: 'Rua das Flores, 123 - Centro',
+              telefoneEmpresa: '(84) 3333-4444',
+              whatsappAdmin: '+5584999999999'
+            }
+          };
+          localStorage.setItem('vendas_db', JSON.stringify(dbInicial));
+        }
+        
+        // Inicializar configurações de backup
+        if (!localStorage.getItem('backup_config')) {
+          const backupConfig = {
+            auto: 'diario',
+            hora: '23:00',
+            maxBackups: 10,
+            ultimoBackup: null,
+            backups: []
+          };
+          localStorage.setItem('backup_config', JSON.stringify(backupConfig));
+        }
+      } catch (e) {
+        console.error('Erro ao inicializar dados:', e);
+        alert('⚠️ Erro ao inicializar o sistema. Tente limpar os dados do navegador ou usar outro navegador.');
       }
     }
-
-    // ========== SISTEMA DE BACKUP ==========
-    const BackupSystem = {
-      criarBackup: function() {
-        const db = buscarDados();
-        const backup = {
-          tipo: 'backup_vendas',
-          versao: '2.0',
-           new Date().toISOString(),
-          dados: db
-        };
-        
-        this.salvarBackupLocal(backup);
-        this.downloadBackup(backup);
-        this.mostrarNotificacao('✅ Backup criado com sucesso!', 'success');
-      },
-      
-      salvarBackupLocal: function(backup) {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        
-        config.backups.unshift({
-          id: Date.now(),
-           backup.data,
-          tamanho: JSON.stringify(backup).length,
-          nome: `backup-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}-${new Date().toLocaleTimeString('pt-BR').replace(/:/g, '-')}.json`
-        });
-        
-        if (config.maxBackups > 0 && config.backups.length > config.maxBackups) {
-          config.backups = config.backups.slice(0, config.maxBackups);
-        }
-        
-        config.ultimoBackup = backup.data;
-        localStorage.setItem('backup_config', JSON.stringify(config));
-        this.atualizarStatus();
-      },
-      
-      downloadBackup: function(backup) {
-        const dataStr = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", backup.nome || `backup-vendas-${new Date().toISOString().slice(0,10)}.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-      },
-      
-      restaurarDeArquivo: function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const backup = JSON.parse(e.target.result);
-            
-            if (backup.tipo !== 'backup_vendas') {
-              this.mostrarNotificacao('❌ Arquivo inválido! Não é um backup do sistema de vendas.', 'error');
-              return;
-            }
-            
-            if (!confirm('⚠️ ATENÇÃO: Restaurar este backup substituirá todos os dados atuais. Deseja continuar?')) {
-              return;
-            }
-            
-            this.criarBackup();
-            localStorage.setItem('vendas_db', JSON.stringify(backup.dados));
-            this.mostrarNotificacao('✅ Backup restaurado com sucesso! Recarregando...', 'success');
-            
-            setTimeout(() => {
-              location.reload();
-            }, 1500);
-            
-          } catch (err) {
-            this.mostrarNotificacao('❌ Erro ao ler arquivo de backup!', 'error');
-            console.error(err);
-          }
-        };
-        reader.readAsText(file);
-      },
-      
-      restaurarDoHistorico: function(backupId) {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        const backup = config.backups.find(b => b.id === backupId);
-        
-        if (!backup) {
-          this.mostrarNotificacao('❌ Backup não encontrado!', 'error');
-          return;
-        }
-        
-        if (!confirm('⚠️ ATENÇÃO: Restaurar este backup substituirá todos os dados atuais. Deseja continuar?')) {
-          return;
-        }
-        
-        this.criarBackup();
-        this.mostrarNotificacao('✅ Backup restaurado! Recarregando...', 'success');
-        
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      },
-      
-      limparHistorico: function() {
-        if (!confirm('⚠️ Deseja realmente limpar todos os backups do histórico? Esta ação não pode ser desfeita.')) {
-          return;
-        }
-        
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        config.backups = [];
-        localStorage.setItem('backup_config', JSON.stringify(config));
-        
-        this.mostrarNotificacao('✅ Histórico de backups limpo!', 'success');
-        this.carregarHistoricoBackups();
-      },
-      
-      carregarHistoricoBackups: function() {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        const lista = document.getElementById('lista-backups');
-        const vazio = document.getElementById('backup-vazio');
-        
-        if (config.backups.length === 0) {
-          lista.style.display = 'none';
-          vazio.style.display = 'block';
-          return;
-        }
-        
-        vazio.style.display = 'none';
-        lista.style.display = 'block';
-        
-        let html = '';
-        config.backups.forEach(b => {
-          const data = new Date(b.data);
-          html += `
-            <div class="backup-item">
-              <div class="info">
-                <div class="name">${b.nome}</div>
-                <div class="date">
-                  ${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR')}
-                  • ${(b.tamanho / 1024).toFixed(2)} KB
-                </div>
-              </div>
-              <div class="actions">
-                <button class="btn btn-sm btn-primary" onclick="BackupSystem.restaurarDoHistorico(${b.id})" title="Restaurar">
-                  🔄
-                </button>
-              </div>
-            </div>
-          `;
-        });
-        
-        lista.innerHTML = html;
-      },
-      
-      atualizarStatus: function() {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        
-        if (config.ultimoBackup) {
-          const data = new Date(config.ultimoBackup);
-          document.getElementById('ultimo-backup').textContent = 
-            `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR')}`;
-          
-          document.getElementById('backup-status').textContent = 
-            `✅ Backup: ${data.toLocaleDateString('pt-BR')}`;
-        }
-      },
-      
-      verificarBackupAutomatico: function() {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        
-        if (config.auto === 'desativado') return;
-        
-        const agora = new Date();
-        const horaAtual = `${agora.getHours().toString().padStart(2, '0')}:${agora.getMinutes().toString().padStart(2, '0')}`;
-        
-        let ultimoBackupDate = null;
-        if (config.ultimoBackup) {
-          ultimoBackupDate = new Date(config.ultimoBackup);
-        }
-        
-        const fezBackupHoje = ultimoBackupDate && 
-          ultimoBackupDate.getDate() === agora.getDate() &&
-          ultimoBackupDate.getMonth() === agora.getMonth() &&
-          ultimoBackupDate.getFullYear() === agora.getFullYear();
-        
-        if (config.auto === 'diario' && horaAtual >= config.hora && !fezBackupHoje) {
-          console.log('⏰ Criando backup automático diário...');
-          this.criarBackup();
-          return;
-        }
-        
-        if (config.auto === 'semanal' && agora.getDay() === 1 && horaAtual >= config.hora && !fezBackupHoje) {
-          console.log('⏰ Criando backup automático semanal...');
-          this.criarBackup();
-        }
-      },
-      
-      atualizarTimer: function() {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        
-        if (config.auto === 'desativado') {
-          document.getElementById('backup-timer').textContent = '❌ Desativado';
-          return;
-        }
-        
-        const agora = new Date();
-        const [horaConfig, minConfig] = config.hora.split(':');
-        const proximoBackup = new Date();
-        proximoBackup.setHours(parseInt(horaConfig), parseInt(minConfig), 0, 0);
-        
-        if (proximoBackup <= agora) {
-          proximoBackup.setDate(proximoBackup.getDate() + (config.auto === 'semanal' ? 7 : 1));
-        }
-        
-        const diff = proximoBackup - agora;
-        const horas = Math.floor(diff / (1000 * 60 * 60));
-        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
-        document.getElementById('backup-timer').textContent = 
-          `⏰ Próximo: ${horas}h ${minutos}m`;
-      },
-      
-      mostrarNotificacao: function(mensagem, tipo = 'success') {
-        const container = document.getElementById('notification-container');
-        const notificacao = document.createElement('div');
-        notificacao.className = `notification ${tipo}`;
-        notificacao.innerHTML = `
-          <i>${tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : '⚠️'}</i>
-          <span>${mensagem}</span>
-        `;
-        
-        container.appendChild(notificacao);
-        
-        setTimeout(() => {
-          notificacao.style.opacity = '0';
-          notificacao.style.transform = 'translateX(400px)';
-          setTimeout(() => {
-            notificacao.remove();
-          }, 300);
-        }, 3000);
-      },
-      
-      salvarConfiguracoes: function() {
-        const config = JSON.parse(localStorage.getItem('backup_config'));
-        config.auto = document.querySelector('input[name="backup-auto"]:checked').value;
-        config.hora = document.getElementById('backup-hora').value;
-        config.maxBackups = parseInt(document.getElementById('max-backups').value);
-        
-        localStorage.setItem('backup_config', JSON.stringify(config));
-        
-        this.mostrarNotificacao('✅ Configurações de backup salvas!', 'success');
-        this.atualizarTimer();
-      }
-    };
-
-    // ========== LEITURA Z ==========
-    const LeituraZ = {
-      gerarRelatorio: function(dataInicio, dataFim) {
-        const db = buscarDados();
-        
-        const vendasPeriodo = db.vendas.filter(v => {
-          const dataVenda = new Date(v.data);
-          const inicio = new Date(dataInicio);
-          const fim = new Date(dataFim);
-          fim.setHours(23, 59, 59, 999);
-          return dataVenda >= inicio && dataVenda <= fim;
-        });
-        
-        const sangriasPeriodo = db.movimentacoes.filter(m => {
-          const dataMov = new Date(m.data);
-          const inicio = new Date(dataInicio);
-          const fim = new Date(dataFim);
-          fim.setHours(23, 59, 59, 999);
-          return m.tipo === 'sangria' && dataMov >= inicio && dataMov <= fim;
-        });
-        
-        // Estatísticas por forma de pagamento
-        const formasPagamento = {
-          pix: { count: 0, total: 0 },
-          credit: { count: 0, total: 0 },
-          debit: { count: 0, total: 0 },
-          money: { count: 0, total: 0 }
-        };
-        
-        vendasPeriodo.forEach(v => {
-          const forma = v.forma_pagamento || 'pix';
-          formasPagamento[forma].count++;
-          formasPagamento[forma].total += v.total;
-        });
-        
-        const totalVendas = vendasPeriodo.reduce((sum, v) => sum + v.total, 0);
-        const totalSangrias = sangriasPeriodo.reduce((sum, s) => sum + s.valor, 0);
-        const totalLiquido = totalVendas - totalSangrias;
-        
-        const produtosVendidos = {};
-        vendasPeriodo.forEach(v => {
-          v.itens.forEach(item => {
-            if (!produtosVendidos[item.descricao]) {
-              produtosVendidos[item.descricao] = { quantidade: 0, total: 0 };
-            }
-            produtosVendidos[item.descricao].quantidade += item.quantidade;
-            produtosVendidos[item.descricao].total += item.quantidade * item.preco;
-          });
-        });
-        
-        const produtosOrdenados = Object.entries(produtosVendidos)
-          .sort((a, b) => b[1].quantidade - a[1].quantidade)
-          .slice(0, 10);
-        
-        const inicioFormatada = new Date(dataInicio).toLocaleDateString('pt-BR');
-        const fimFormatada = new Date(dataFim).toLocaleDateString('pt-BR');
-        
-        let html = `
-          <h2>📊 LEITURA Z</h2>
-          <div class="section">
-            <div class="section-title">📅 Período</div>
-            <div class="row">
-              <span>Início:</span>
-              <span>${inicioFormatada}</span>
-            </div>
-            <div class="row">
-              <span>Fim:</span>
-              <span>${fimFormatada}</span>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">💰 Vendas</div>
-            <div class="row">
-              <span>Total de Vendas:</span>
-              <span>${vendasPeriodo.length}</span>
-            </div>
-            <div class="row">
-              <span>Valor Total:</span>
-              <span>R$ ${totalVendas.toFixed(2).replace('.', ',')}</span>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">💳 Formas de Pagamento</div>
-            <div class="row">
-              <span>Pix (${formasPagamento.pix.count} vendas):</span>
-              <span>R$ ${formasPagamento.pix.total.toFixed(2).replace('.', ',')}</span>
-            </div>
-            <div class="row">
-              <span>Cartão Crédito (${formasPagamento.credit.count} vendas):</span>
-              <span>R$ ${formasPagamento.credit.total.toFixed(2).replace('.', ',')}</span>
-            </div>
-            <div class="row">
-              <span>Cartão Débito (${formasPagamento.debit.count} vendas):</span>
-              <span>R$ ${formasPagamento.debit.total.toFixed(2).replace('.', ',')}</span>
-            </div>
-            <div class="row">
-              <span>Dinheiro (${formasPagamento.money.count} vendas):</span>
-              <span>R$ ${formasPagamento.money.total.toFixed(2).replace('.', ',')}</span>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">💸 Sangrias</div>
-            <div class="row">
-              <span>Total de Sangrias:</span>
-              <span>${sangriasPeriodo.length}</span>
-            </div>
-            <div class="row">
-              <span>Valor Total:</span>
-              <span>R$ ${totalSangrias.toFixed(2).replace('.', ',')}</span>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">📈 Resultado</div>
-            <div class="row total">
-              <span>💰 Total Líquido:</span>
-              <span>R$ ${totalLiquido.toFixed(2).replace('.', ',')}</span>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">🏆 Produtos Mais Vendidos (Top 10)</div>
-        `;
-        
-        produtosOrdenados.forEach(([produto, dados]) => {
-          html += `
-            <div class="row">
-              <span>${produto} (${dados.quantidade}x):</span>
-              <span>R$ ${dados.total.toFixed(2).replace('.', ',')}</span>
-            </div>
-          `;
-        });
-        
-        html += `
-          </div>
-          
-          <div class="section">
-            <div class="section-title">🔍 Consultar Cupom</div>
-            <div class="row" style="text-align: center;">
-              <button class="btn btn-primary" onclick="document.getElementById('modal-leitura-z').style.display='none'; document.getElementById('modal-consultar-venda').style.display='flex';" style="width: 100%; padding: 10px;">
-                🔍 Consultar Cupom por Número
-              </button>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">📅 Data da Leitura</div>
-            <div class="row">
-              <span>Emitido em:</span>
-              <span>${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('zreport-content').innerHTML = html;
-        document.getElementById('zreport-container').style.display = 'block';
-        
-        BackupSystem.mostrarNotificacao('✅ Leitura Z gerada com sucesso!', 'success');
-      },
-      
-      imprimir: function() {
-        window.print();
-      },
-      
-      exportarPDF: function() {
-        BackupSystem.mostrarNotificacao('ℹ️ Use Imprimir + Salvar como PDF.', 'warning');
-      }
-    };
-
-    // ========== CUPOM FISCAL ==========
-    const CupomFiscal = {
-      gerar: function(venda) {
-        const db = buscarDados();
-        const config = db.config;
-        const cliente = venda.cliente_id ? db.clientes.find(c => c.id === venda.cliente_id) : null;
-        const usuario = db.usuarios.find(u => u.id === venda.usuario_id);
-        const data = new Date(venda.data);
-        
-        // Mapear forma de pagamento
-        const formas = {
-          pix: 'Pix',
-          credit: 'Cartão de Crédito',
-          debit: 'Cartão de Débito',
-          money: 'Dinheiro'
-        };
-        
-        let html = `
-          <div class="cupom">
-            <div class="header">
-              <div class="title">${config.nomeEmpresa || 'ARMAZÉM / ARMARINHO'}</div>
-              <div class="cnpj">${config.cnpjEmpresa || 'CNPJ: 00.000.000/0001-00'}</div>
-              <div class="endereco">${config.enderecoEmpresa || 'Endereço não configurado'}</div>
-              <div class="endereco">📞 ${config.telefoneEmpresa || '(00) 0000-0000'}</div>
-            </div>
-            
-            <div class="info">
-              <div class="info-row">
-                <span>Cupom:</span>
-                <span>${venda.id.toString().padStart(6, '0')}</span>
-              </div>
-              <div class="info-row">
-                <span>Data:</span>
-                <span>${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR')}</span>
-              </div>
-              <div class="info-row">
-                <span>Operador:</span>
-                <span>${usuario.nome}</span>
-              </div>
-              <div class="info-row">
-                <span>Forma Pgto:</span>
-                <span>${formas[venda.forma_pagamento] || 'Pix'}</span>
-              </div>
-              ${venda.valor_recebido ? `
-              <div class="info-row">
-                <span>Valor Recebido:</span>
-                <span>R$ ${venda.valor_recebido.toFixed(2).replace('.', ',')}</span>
-              </div>
-              <div class="info-row">
-                <span>Troco:</span>
-                <span>R$ ${venda.troco.toFixed(2).replace('.', ',')}</span>
-              </div>
-              ` : ''}
-              ${cliente ? `
-              <div class="info-row">
-                <span>Cliente:</span>
-                <span>${cliente.nome}</span>
-              </div>
-              <div class="info-row">
-                <span>Documento:</span>
-                <span>${formatarDocumento(cliente.documento, cliente.tipo)}</span>
-              </div>
-              ` : ''}
-            </div>
-            
-            <div class="items">
-              <div class="item" style="font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 5px;">
-                <span class="desc">Produto</span>
-                <span class="qty">Qtd</span>
-                <span class="price">Valor</span>
-              </div>
-        `;
-        
-        venda.itens.forEach(item => {
-          html += `
-            <div class="item">
-              <span class="desc">${item.descricao}</span>
-              <span class="qty">${item.quantidade}</span>
-              <span class="price">R$ ${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}</span>
-            </div>
-          `;
-        });
-        
-        html += `
-            </div>
-            
-            <div class="total">
-              <div class="info-row">
-                <span>TOTAL:</span>
-                <span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <p>Obrigado e volte sempre!</p>
-              <p>${config.nomeEmpresa}</p>
-              <p>${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('cupom-container').innerHTML = html;
-        document.getElementById('modal-cupom').style.display = 'flex';
-        
-        // Enviar para WhatsApp automaticamente
-        this.enviarWhatsApp(venda, html);
-      },
-      
-      imprimir: function() {
-        window.print();
-      },
-      
-      reimprimir: function() {
-        this.imprimir();
-        BackupSystem.mostrarNotificacao('✅ Cupom reimpresso!', 'success');
-      },
-      
-      enviarWhatsApp: function(venda, cupomHTML) {
-        const db = buscarDados();
-        const config = db.config;
-        const whatsappAdmin = config.whatsappAdmin || '+5584999999999';
-        
-        // Extrair texto do cupom para enviar no WhatsApp
-        const textoCupom = `
-*CUPOM FISCAL - ${config.nomeEmpresa}*
-
-🔢 Cupom: ${venda.id.toString().padStart(6, '0')}
-📅 Data: ${new Date(venda.data).toLocaleDateString('pt-BR')} ${new Date(venda.data).toLocaleTimeString('pt-BR')}
-💰 Total: R$ ${venda.total.toFixed(2)}
-
-${venda.itens.map(item => `• ${item.descricao} (${item.quantidade}x) - R$ ${(item.quantidade * item.preco).toFixed(2)}`).join('\n')}
-
-━━━━━━━━━━━━━━━━━━
-*Total: R$ ${venda.total.toFixed(2)}*
-━━━━━━━━━━━━━━━━━━
-
-Obrigado e volte sempre!
-        `.trim();
-        
-        const mensagem = encodeURIComponent(textoCupom);
-        const urlWhatsApp = `https://wa.me/${whatsappAdmin}?text=${mensagem}`;
-        
-        // Abrir WhatsApp em nova aba
-        window.open(urlWhatsApp, '_blank');
-        
-        BackupSystem.mostrarNotificacao('✅ Cupom enviado para WhatsApp!', 'success');
-      },
-      
-      consultarPorNumero: function(numeroCupom) {
-        const db = buscarDados();
-        const venda = db.vendas.find(v => v.id === parseInt(numeroCupom));
-        
-        if (!venda) {
-          BackupSystem.mostrarNotificacao('❌ Cupom não encontrado!', 'error');
-          return false;
-        }
-        
-        // Gerar cupom para visualização
-        const config = db.config;
-        const cliente = venda.cliente_id ? db.clientes.find(c => c.id === venda.cliente_id) : null;
-        const usuario = db.usuarios.find(u => u.id === venda.usuario_id);
-        const data = new Date(venda.data);
-        
-        const formas = {
-          pix: 'Pix',
-          credit: 'Cartão de Crédito',
-          debit: 'Cartão de Débito',
-          money: 'Dinheiro'
-        };
-        
-        let html = `
-          <div class="cupom">
-            <div class="header">
-              <div class="title">${config.nomeEmpresa || 'ARMAZÉM / ARMARINHO'}</div>
-              <div class="cnpj">${config.cnpjEmpresa || 'CNPJ: 00.000.000/0001-00'}</div>
-              <div class="endereco">${config.enderecoEmpresa || 'Endereço não configurado'}</div>
-            </div>
-            
-            <div class="info">
-              <div class="info-row">
-                <span>Cupom:</span>
-                <span>${venda.id.toString().padStart(6, '0')}</span>
-              </div>
-              <div class="info-row">
-                <span>Data:</span>
-                <span>${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR')}</span>
-              </div>
-              <div class="info-row">
-                <span>Operador:</span>
-                <span>${usuario.nome}</span>
-              </div>
-              <div class="info-row">
-                <span>Forma Pgto:</span>
-                <span>${formas[venda.forma_pagamento] || 'Pix'}</span>
-              </div>
-              ${venda.valor_recebido ? `
-              <div class="info-row">
-                <span>Valor Recebido:</span>
-                <span>R$ ${venda.valor_recebido.toFixed(2).replace('.', ',')}</span>
-              </div>
-              <div class="info-row">
-                <span>Troco:</span>
-                <span>R$ ${venda.troco.toFixed(2).replace('.', ',')}</span>
-              </div>
-              ` : ''}
-              ${cliente ? `
-              <div class="info-row">
-                <span>Cliente:</span>
-                <span>${cliente.nome}</span>
-              </div>
-              <div class="info-row">
-                <span>Documento:</span>
-                <span>${formatarDocumento(cliente.documento, cliente.tipo)}</span>
-              </div>
-              ` : ''}
-            </div>
-            
-            <div class="items">
-              <div class="item" style="font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 5px;">
-                <span class="desc">Produto</span>
-                <span class="qty">Qtd</span>
-                <span class="price">Valor</span>
-              </div>
-        `;
-        
-        venda.itens.forEach(item => {
-          html += `
-            <div class="item">
-              <span class="desc">${item.descricao}</span>
-              <span class="qty">${item.quantidade}</span>
-              <span class="price">R$ ${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}</span>
-            </div>
-          `;
-        });
-        
-        html += `
-            </div>
-            
-            <div class="total">
-              <div class="info-row">
-                <span>TOTAL:</span>
-                <span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <p>Obrigado e volte sempre!</p>
-              <p>${config.nomeEmpresa}</p>
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('cupom-consultado').innerHTML = html;
-        document.getElementById('resultado-cupom').style.display = 'block';
-        document.getElementById('btn-imprimir-consulta').style.display = 'block';
-        
-        return true;
-      }
-    };
-
-    // ========== VERIFICAÇÃO DE SENHA ==========
-    const VerificacaoSenha = {
-      verificar: function(callback) {
-        document.getElementById('modal-senha-admin').style.display = 'flex';
-        
-        const confirmarBtn = document.getElementById('btn-confirmar-senha');
-        const cancelarBtn = document.getElementById('btn-cancelar-senha');
-        const senhaInput = document.getElementById('senha-admin-input');
-        
-        function handlerConfirmar() {
-          const senha = senhaInput.value;
-          
-          if (senha === 'java1814') {
-            callback(true);
-            fecharModal();
-          } else {
-            BackupSystem.mostrarNotificacao('❌ Senha incorreta!', 'error');
-            senhaInput.value = '';
-            senhaInput.focus();
-          }
-        }
-        
-        function handlerCancelar() {
-          callback(false);
-          fecharModal();
-        }
-        
-        function fecharModal() {
-          confirmarBtn.removeEventListener('click', handlerConfirmar);
-          cancelarBtn.removeEventListener('click', handlerCancelar);
-          senhaInput.removeEventListener('keypress', handleEnter);
-          document.getElementById('modal-senha-admin').style.display = 'none';
-          senhaInput.value = '';
-        }
-        
-        function handleEnter(e) {
-          if (e.key === 'Enter') {
-            handlerConfirmar();
-          }
-        }
-        
-        confirmarBtn.addEventListener('click', handlerConfirmar);
-        cancelarBtn.addEventListener('click', handlerCancelar);
-        senhaInput.addEventListener('keypress', handleEnter);
-        senhaInput.focus();
-      }
-    };
 
     // ========== FUNÇÕES AUXILIARES ==========
     function formatarMoeda(valor) {
@@ -1507,11 +783,21 @@ Obrigado e volte sempre!
     }
 
     function buscarDados() {
-      return JSON.parse(localStorage.getItem('vendas_db'));
+      try {
+        return JSON.parse(localStorage.getItem('vendas_db'));
+      } catch (e) {
+        console.error('Erro ao buscar dados:', e);
+        return null;
+      }
     }
 
     function salvarDados(db) {
-      localStorage.setItem('vendas_db', JSON.stringify(db));
+      try {
+        localStorage.setItem('vendas_db', JSON.stringify(db));
+      } catch (e) {
+        console.error('Erro ao salvar dados:', e);
+        alert('⚠️ Erro ao salvar dados. O armazenamento local pode estar cheio ou bloqueado.');
+      }
     }
 
     // ========== AUTENTICAÇÃO ==========
@@ -1521,6 +807,12 @@ Obrigado e volte sempre!
       const errorDiv = document.getElementById('error-login');
       
       const db = buscarDados();
+      if (!db) {
+        errorDiv.textContent = 'Erro ao carregar banco de dados!';
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
       const user = db.usuarios.find(u => u.login === usuario && u.senha === senha && u.ativo !== false);
       
       if (user) {
@@ -1533,8 +825,7 @@ Obrigado e volte sempre!
         document.getElementById('screen-vendas').style.display = 'block';
         
         carregarProdutos();
-        BackupSystem.atualizarStatus();
-        BackupSystem.atualizarTimer();
+        atualizarStatusBackup();
         errorDiv.style.display = 'none';
       } else {
         errorDiv.textContent = 'Usuário ou senha inválidos!';
@@ -1553,6 +844,8 @@ Obrigado e volte sempre!
     // ========== PRODUTOS ==========
     function carregarProdutos() {
       const db = buscarDados();
+      if (!db) return;
+      
       const lista = document.getElementById('lista-produtos');
       lista.innerHTML = '';
       
@@ -1682,40 +975,6 @@ Obrigado e volte sempre!
 
     document.getElementById('valor-recebido').addEventListener('input', atualizarTroco);
 
-    // ========== CLIENTES ==========
-    function carregarClientesModal() {
-      const db = buscarDados();
-      const lista = document.getElementById('lista-clientes-modal');
-      lista.innerHTML = '';
-      
-      if (db.clientes.length === 0) {
-        lista.innerHTML = '<div style="padding:15px; text-align:center; color:#999">Nenhum cliente cadastrado</div>';
-        return;
-      }
-      
-      db.clientes.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'client-item';
-        div.innerHTML = `
-          <div class="name">${c.nome}</div>
-          <div class="doc">${formatarDocumento(c.documento, c.tipo)}</div>
-        `;
-        div.addEventListener('click', () => selecionarCliente(c));
-        lista.appendChild(div);
-      });
-    }
-
-    function selecionarCliente(cliente) {
-      clienteSelecionado = cliente;
-      document.getElementById('cliente-selecionado').innerHTML = `
-        <div class="client-selected">
-          <div class="name">${cliente.nome}</div>
-          <div class="doc">${formatarDocumento(cliente.documento, cliente.tipo)}</div>
-        </div>
-      `;
-      document.getElementById('modal-selecionar-cliente').style.display = 'none';
-    }
-
     // ========== LEITOR DE CÓDIGO DE BARRAS ==========
     document.getElementById('barcode-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -1724,17 +983,19 @@ Obrigado e volte sempre!
         
         if (codigo) {
           const db = buscarDados();
+          if (!db) return;
+          
           const produto = db.produtos.find(p => 
-            p.codigo_barra === codigo || 
-            p.codigo === codigo ||
+            (p.codigo_barra && p.codigo_barra === codigo) || 
+            (p.codigo && p.codigo === codigo) ||
             p.descricao.toLowerCase().includes(codigo.toLowerCase())
           );
           
           if (produto && produto.ativo !== false) {
             adicionarAoCarrinho(produto);
-            BackupSystem.mostrarNotificacao(`✅ ${produto.descricao} adicionado ao carrinho!`, 'success');
+            mostrarNotificacao(`✅ ${produto.descricao} adicionado ao carrinho!`, 'success');
           } else {
-            BackupSystem.mostrarNotificacao('❌ Produto não encontrado!', 'error');
+            mostrarNotificacao('❌ Produto não encontrado!', 'error');
           }
           
           document.getElementById('barcode-input').value = '';
@@ -1742,615 +1003,60 @@ Obrigado e volte sempre!
       }
     });
 
-    // ========== VENDAS ==========
-    document.getElementById('btn-finalizar').addEventListener('click', () => {
-      if (carrinho.length === 0) {
-        alert('⚠️ Adicione produtos ao carrinho antes de finalizar!');
-        return;
-      }
-      
-      const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco), 0);
-      
-      // Validar valor recebido se for dinheiro
-      if (formaPagamento === 'money') {
-        const valorRecebido = parseFloat(document.getElementById('valor-recebido').value) || 0;
-        if (valorRecebido < total) {
-          alert(`⚠️ Valor recebido (R$ ${valorRecebido.toFixed(2)}) é menor que o total (R$ ${total.toFixed(2)})!`);
-          return;
+    // ========== SISTEMA DE BACKUP (Simplificado) ==========
+    function atualizarStatusBackup() {
+      try {
+        const config = JSON.parse(localStorage.getItem('backup_config'));
+        if (config && config.ultimoBackup) {
+          const data = new Date(config.ultimoBackup);
+          document.getElementById('ultimo-backup').textContent = 
+            `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR')}`;
+          document.getElementById('backup-status').textContent = 
+            `✅ Backup: ${data.toLocaleDateString('pt-BR')}`;
         }
+      } catch (e) {
+        console.error('Erro ao atualizar status do backup:', e);
       }
-      
-      let msg = `✅ Confirmar venda no valor de ${formatarMoeda(total)}?`;
-      if (clienteSelecionado) {
-        msg = `✅ Confirmar venda para ${clienteSelecionado.nome} no valor de ${formatarMoeda(total)}?`;
-      }
-      
-      if (!confirm(msg)) return;
-      
-      const db = buscarDados();
-      db.config.ultimoIdVenda = (db.config.ultimoIdVenda || 0) + 1;
-      
-      // Calcular troco se for dinheiro
-      let valorRecebido = null;
-      let troco = 0;
-      if (formaPagamento === 'money') {
-        valorRecebido = parseFloat(document.getElementById('valor-recebido').value) || 0;
-        troco = valorRecebido - total;
-      }
-      
-      const novaVenda = {
-        id: db.config.ultimoIdVenda,
-         new Date().toISOString(),
-        usuario_id: parseInt(sessionStorage.getItem('user_id')),
-        cliente_id: clienteSelecionado ? clienteSelecionado.id : null,
-        total: total,
-        forma_pagamento: formaPagamento,
-        valor_recebido: valorRecebido,
-        troco: troco,
-        itens: carrinho.map(item => ({...item}))
-      };
-      
-      db.vendas.push(novaVenda);
-      salvarDados(db);
-      
-      // Gerar cupom
-      CupomFiscal.gerar(novaVenda);
-      
-      // Limpar carrinho e cliente
-      carrinho = [];
-      clienteSelecionado = null;
-      formaPagamento = 'pix';
-      document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
-      document.getElementById('valor-recebido').value = '';
-      document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-      document.querySelector('.payment-option[data-payment="pix"]').classList.add('selected');
-      atualizarCarrinho();
-    });
-
-    // ========== CONSULTAR VENDA POR CUPOM ==========
-    document.getElementById('btn-buscar-cupom').addEventListener('click', () => {
-      const numero = document.getElementById('numero-cupom').value.trim();
-      if (!numero) {
-        alert('⚠️ Informe o número do cupom!');
-        return;
-      }
-      
-      const sucesso = CupomFiscal.consultarPorNumero(numero);
-      if (sucesso) {
-        BackupSystem.mostrarNotificacao('✅ Cupom encontrado!', 'success');
-      }
-    });
-
-    document.getElementById('btn-imprimir-consulta').addEventListener('click', () => {
-      window.print();
-    });
-
-    document.getElementById('btn-fechar-consulta').addEventListener('click', () => {
-      document.getElementById('modal-consultar-venda').style.display = 'none';
-      document.getElementById('resultado-cupom').style.display = 'none';
-      document.getElementById('btn-imprimir-consulta').style.display = 'none';
-      document.getElementById('numero-cupom').value = '';
-    });
-
-    // ========== SANGRIA ==========
-    document.getElementById('btn-sangria').addEventListener('click', () => {
-      document.getElementById('modal-sangria').style.display = 'flex';
-      document.getElementById('valor-sangria').focus();
-    });
-
-    document.getElementById('btn-cancelar-sangria').addEventListener('click', () => {
-      document.getElementById('modal-sangria').style.display = 'none';
-    });
-
-    document.getElementById('btn-confirmar-sangria').addEventListener('click', () => {
-      const valor = parseFloat(document.getElementById('valor-sangria').value);
-      const especificacao = document.getElementById('especificacao-sangria').value;
-      const senha = document.getElementById('senha-admin-sangria').value;
-      
-      if (!valor || valor <= 0) {
-        alert('⚠️ Informe um valor válido para a sangria!');
-        return;
-      }
-      
-      if (senha !== 'java1814') {
-        alert('❌ Senha de administrador inválida! Tente novamente.');
-        return;
-      }
-      
-      const db = buscarDados();
-      db.movimentacoes.push({
-        id: Date.now(),
-         new Date().toISOString(),
-        usuario_id: parseInt(sessionStorage.getItem('user_id')),
-        tipo: 'sangria',
-        valor: valor,
-        especificacao: especificacao,
-        senha_admin: senha
-      });
-      
-      salvarDados(db);
-      
-      alert(`✅ Sangria de ${formatarMoeda(valor)} registrada com sucesso!`);
-      document.getElementById('modal-sangria').style.display = 'none';
-      document.getElementById('valor-sangria').value = '';
-      document.getElementById('especificacao-sangria').value = '';
-      document.getElementById('senha-admin-sangria').value = '';
-    });
-
-    // ========== CANCELAR VENDA ==========
-    document.getElementById('btn-cancelar').addEventListener('click', () => {
-      if (carrinho.length === 0) {
-        alert('ℹ️ Carrinho já está vazio');
-        return;
-      }
-      
-      if (confirm('⚠️ Deseja cancelar esta venda? Todos os itens serão removidos.')) {
-        carrinho = [];
-        clienteSelecionado = null;
-        document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
-        atualizarCarrinho();
-        alert('✅ Venda cancelada com sucesso!');
-      }
-    });
-
-    // ========== LEITURA Z ==========
-    document.getElementById('btn-leitura-z').addEventListener('click', () => {
-      document.getElementById('modal-leitura-z').style.display = 'flex';
-      
-      const hoje = new Date().toISOString().split('T')[0];
-      document.getElementById('data-inicio-zreport').value = hoje;
-      document.getElementById('data-fim-zreport').value = hoje;
-    });
-
-    document.getElementById('btn-gerar-zreport').addEventListener('click', () => {
-      const dataInicio = document.getElementById('data-inicio-zreport').value;
-      const dataFim = document.getElementById('data-fim-zreport').value;
-      
-      if (!dataInicio || !dataFim) {
-        alert('⚠️ Selecione ambas as datas!');
-        return;
-      }
-      
-      LeituraZ.gerarRelatorio(dataInicio, dataFim);
-    });
-
-    document.getElementById('btn-imprimir-zreport').addEventListener('click', () => {
-      LeituraZ.imprimir();
-    });
-
-    document.getElementById('btn-exportar-zreport').addEventListener('click', () => {
-      LeituraZ.exportarPDF();
-    });
-
-    document.getElementById('btn-fechar-zreport').addEventListener('click', () => {
-      document.getElementById('modal-leitura-z').style.display = 'none';
-      document.getElementById('zreport-container').style.display = 'none';
-    });
-
-    // ========== CUPOM ==========
-    document.getElementById('btn-imprimir-cupom').addEventListener('click', () => {
-      CupomFiscal.imprimir();
-    });
-
-    document.getElementById('btn-whatsapp-cupom').addEventListener('click', () => {
-      // Reenviar cupom atual para WhatsApp
-      const db = buscarDados();
-      const ultimaVenda = db.vendas[db.vendas.length - 1];
-      if (ultimaVenda) {
-        CupomFiscal.enviarWhatsApp(ultimaVenda);
-      }
-    });
-
-    document.getElementById('btn-fechar-cupom').addEventListener('click', () => {
-      document.getElementById('modal-cupom').style.display = 'none';
-    });
-
-    document.getElementById('btn-reimprimir-cupom').addEventListener('click', () => {
-      CupomFiscal.reimprimir();
-    });
-
-    // ========== MODALS ==========
-    document.getElementById('btn-selecionar-cliente').addEventListener('click', () => {
-      document.getElementById('modal-selecionar-cliente').style.display = 'flex';
-      carregarClientesModal();
-      document.getElementById('busca-cliente-modal').focus();
-    });
-
-    document.getElementById('btn-fechar-cliente').addEventListener('click', () => {
-      document.getElementById('modal-selecionar-cliente').style.display = 'none';
-    });
-
-    document.getElementById('btn-remover-cliente').addEventListener('click', () => {
-      clienteSelecionado = null;
-      document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
-      document.getElementById('modal-selecionar-cliente').style.display = 'none';
-    });
-
-    document.getElementById('btn-clientes-menu').addEventListener('click', () => {
-      document.getElementById('modal-clientes').style.display = 'flex';
-      carregarListaClientes();
-    });
-
-    document.getElementById('btn-produtos-menu').addEventListener('click', () => {
-      document.getElementById('modal-produtos').style.display = 'flex';
-      carregarListaProdutosModal();
-    });
-
-    document.getElementById('btn-backup').addEventListener('click', () => {
-      document.getElementById('modal-backup').style.display = 'flex';
-      BackupSystem.carregarHistoricoBackups();
-    });
-
-    document.getElementById('btn-fechar-clientes').addEventListener('click', () => {
-      document.getElementById('modal-clientes').style.display = 'none';
-    });
-
-    document.getElementById('btn-fechar-produtos').addEventListener('click', () => {
-      document.getElementById('modal-produtos').style.display = 'none';
-    });
-
-    document.getElementById('btn-fechar-backup').addEventListener('click', () => {
-      document.getElementById('modal-backup').style.display = 'none';
-    });
-
-    // Fechar modals ao clicar fora
-    document.querySelectorAll('.modal').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-      });
-    });
-
-    // ========== TABS ==========
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const tabName = tab.getAttribute('data-tab');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        tab.classList.add('active');
-        
-        // Backup tabs
-        if (tabName === 'backup-manual') {
-          document.getElementById('tab-backup-manual').classList.add('active');
-        } else if (tabName === 'backup-historico') {
-          document.getElementById('tab-backup-historico').classList.add('active');
-          BackupSystem.carregarHistoricoBackups();
-        } else if (tabName === 'backup-restaurar') {
-          document.getElementById('tab-backup-restaurar').classList.add('active');
-        } else if (tabName === 'backup-config') {
-          document.getElementById('tab-backup-config').classList.add('active');
-          const config = JSON.parse(localStorage.getItem('backup_config'));
-          document.querySelector(`input[name="backup-auto"][value="${config.auto}"]`).checked = true;
-          document.getElementById('backup-hora').value = config.hora;
-          document.getElementById('max-backups').value = config.maxBackups;
-        } 
-        // Clientes tabs
-        else if (tabName === 'lista') {
-          document.getElementById('tab-lista-clientes').classList.add('active');
-          carregarListaClientes();
-        } else if (tabName === 'novo') {
-          document.getElementById('tab-novo-cliente').classList.add('active');
-          document.getElementById('cliente-nome').focus();
-        } 
-        // Produtos tabs
-        else if (tabName === 'lista-prod') {
-          document.getElementById('tab-lista-produtos').classList.add('active');
-          carregarListaProdutosModal();
-        } else if (tabName === 'novo-prod') {
-          document.getElementById('tab-novo-produto').classList.add('active');
-          document.getElementById('produto-descricao').focus();
-        }
-      });
-    });
-
-    // ========== BACKUP BUTTONS ==========
-    document.getElementById('btn-criar-backup').addEventListener('click', () => {
-      BackupSystem.criarBackup();
-    });
-
-    document.getElementById('btn-limpar-historico').addEventListener('click', () => {
-      BackupSystem.limparHistorico();
-    });
-
-    document.getElementById('arquivo-restore').addEventListener('change', (e) => {
-      BackupSystem.restaurarDeArquivo(e);
-    });
-
-    document.getElementById('btn-restaurar-arquivo').addEventListener('click', () => {
-      const fileInput = document.getElementById('arquivo-restore');
-      if (!fileInput.files.length) {
-        BackupSystem.mostrarNotificacao('⚠️ Selecione um arquivo de backup primeiro!', 'warning');
-        return;
-      }
-      BackupSystem.restaurarDeArquivo({ target: fileInput });
-    });
-
-    document.getElementById('btn-salvar-config').addEventListener('click', () => {
-      BackupSystem.salvarConfiguracoes();
-    });
-
-    // ========== CRUD CLIENTES ==========
-    function carregarListaClientes() {
-      const db = buscarDados();
-      const busca = document.getElementById('busca-clientes-lista').value.toLowerCase();
-      const container = document.getElementById('container-clientes-lista');
-      
-      const clientesFiltrados = db.clientes.filter(c => 
-        c.nome.toLowerCase().includes(busca) || 
-        c.documento.includes(busca.replace(/\D/g, ''))
-      );
-      
-      if (clientesFiltrados.length === 0) {
-        container.innerHTML = '<div class="empty">Nenhum cliente encontrado</div>';
-        return;
-      }
-      
-      let html = '<table style="width:100%; border-collapse:collapse;">';
-      html += '<thead><tr><th>Nome</th><th>Documento</th><th>Tipo</th><th>Ações</th></tr></thead><tbody>';
-      
-      clientesFiltrados.forEach(c => {
-        html += `
-          <tr style="border-bottom:1px solid #eee;">
-            <td>${c.nome}</td>
-            <td>${formatarDocumento(c.documento, c.tipo)}</td>
-            <td><span class="badge badge-${c.tipo}">${c.tipo.toUpperCase()}</span></td>
-            <td>
-              <button class="btn btn-sm" style="padding:4px 8px; font-size:12px; background:#3498db; color:white; margin-right:5px;" onclick="editarCliente(${c.id})">✏️</button>
-              <button class="btn btn-sm" style="padding:4px 8px; font-size:12px; background:#e74c3c; color:white;" onclick="excluirCliente(${c.id})">🗑️</button>
-            </td>
-          </tr>
-        `;
-      });
-      
-      html += '</tbody></table>';
-      container.innerHTML = html;
     }
 
-    window.editarCliente = function(id) {
-      const db = buscarDados();
-      const cliente = db.clientes.find(c => c.id === id);
-      if (!cliente) return;
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+      const container = document.getElementById('notification-container');
+      const notificacao = document.createElement('div');
+      notificacao.className = `notification ${tipo}`;
+      notificacao.innerHTML = `
+        <i>${tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : '⚠️'}</i>
+        <span>${mensagem}</span>
+      `;
       
-      document.querySelector('[data-tab="novo"]').click();
+      container.appendChild(notificacao);
       
-      document.getElementById('cliente-nome').value = cliente.nome;
-      document.getElementById('cliente-tipo').value = cliente.tipo;
-      document.getElementById('cliente-documento').value = formatarDocumento(cliente.documento, cliente.tipo);
-      document.getElementById('cliente-telefone').value = cliente.telefone || '';
-      document.getElementById('cliente-email').value = cliente.email || '';
-      document.getElementById('cliente-endereco').value = cliente.endereco || '';
-      
-      document.getElementById('btn-salvar-cliente').setAttribute('data-editando', id);
-    };
-
-    window.excluirCliente = function(id) {
-      VerificacaoSenha.verificar((autorizado) => {
-        if (!autorizado) {
-          BackupSystem.mostrarNotificacao('❌ Operação cancelada!', 'warning');
-          return;
-        }
-        
-        if (!confirm('⚠️ Deseja realmente excluir este cliente?')) return;
-        
-        const db = buscarDados();
-        db.clientes = db.clientes.filter(c => c.id !== id);
-        salvarDados(db);
-        
-        BackupSystem.mostrarNotificacao('✅ Cliente excluído com sucesso!', 'success');
-        carregarListaClientes();
-      });
-    };
-
-    document.getElementById('btn-salvar-cliente').addEventListener('click', () => {
-      const nome = document.getElementById('cliente-nome').value.trim();
-      const tipo = document.getElementById('cliente-tipo').value;
-      const documento = document.getElementById('cliente-documento').value.replace(/\D/g, '');
-      const telefone = document.getElementById('cliente-telefone').value.replace(/\D/g, '');
-      const email = document.getElementById('cliente-email').value.trim();
-      const endereco = document.getElementById('cliente-endereco').value.trim();
-      
-      if (!nome) {
-        alert('⚠️ O nome é obrigatório!');
-        return;
-      }
-      
-      if (documento.length < (tipo === 'cpf' ? 11 : 14)) {
-        alert(`⚠️ O ${tipo.toUpperCase()} deve estar completo!`);
-        return;
-      }
-      
-      const db = buscarDados();
-      const editandoId = document.getElementById('btn-salvar-cliente').getAttribute('data-editando');
-      
-      if (editandoId) {
-        const cliente = db.clientes.find(c => c.id === parseInt(editandoId));
-        if (cliente) {
-          cliente.nome = nome;
-          cliente.tipo = tipo;
-          cliente.documento = documento;
-          cliente.telefone = telefone;
-          cliente.email = email;
-          cliente.endereco = endereco;
-          BackupSystem.mostrarNotificacao('✅ Cliente atualizado com sucesso!', 'success');
-        }
-      } else {
-        db.config.ultimoIdCliente = (db.config.ultimoIdCliente || 0) + 1;
-        db.clientes.push({
-          id: db.config.ultimoIdCliente,
-          nome: nome,
-          tipo: tipo,
-          documento: documento,
-          telefone: telefone,
-          email: email,
-          endereco: endereco
-        });
-        BackupSystem.mostrarNotificacao('✅ Cliente cadastrado com sucesso!', 'success');
-      }
-      
-      salvarDados(db);
-      document.getElementById('btn-salvar-cliente').removeAttribute('data-editando');
-      document.querySelector('[data-tab="lista"]').click();
-      carregarListaClientes();
-    });
-
-    document.getElementById('busca-clientes-lista').addEventListener('input', carregarListaClientes);
-
-    // ========== CRUD PRODUTOS ==========
-    function carregarListaProdutosModal() {
-      const db = buscarDados();
-      const busca = document.getElementById('busca-produtos-lista').value.toLowerCase();
-      const container = document.getElementById('container-produtos-lista');
-      
-      const produtosFiltrados = db.produtos.filter(p => 
-        p.descricao.toLowerCase().includes(busca) || 
-        (p.codigo && p.codigo.includes(busca)) ||
-        (p.codigo_barra && p.codigo_barra.includes(busca))
-      );
-      
-      if (produtosFiltrados.length === 0) {
-        container.innerHTML = '<div class="empty">Nenhum produto encontrado</div>';
-        return;
-      }
-      
-      let html = '<table style="width:100%; border-collapse:collapse;">';
-      html += '<thead><tr><th>Código</th><th>Descrição</th><th>Código Barras</th><th>Preço</th><th>Estoque</th><th>Ações</th></tr></thead><tbody>';
-      
-      produtosFiltrados.forEach(p => {
-        html += `
-          <tr style="border-bottom:1px solid #eee;">
-            <td>${p.codigo || '-'}</td>
-            <td>${p.descricao}</td>
-            <td>${p.codigo_barra || '-'}</td>
-            <td>${formatarMoeda(p.preco_venda)}</td>
-            <td>${p.estoque}</td>
-            <td>
-              <button class="btn btn-sm" style="padding:4px 8px; font-size:12px; background:#e74c3c; color:white;" onclick="excluirProduto(${p.id})">🗑️</button>
-            </td>
-          </tr>
-        `;
-      });
-      
-      html += '</tbody></table>';
-      container.innerHTML = html;
+      setTimeout(() => {
+        notificacao.style.opacity = '0';
+        notificacao.style.transform = 'translateX(400px)';
+        setTimeout(() => {
+          notificacao.remove();
+        }, 300);
+      }, 3000);
     }
-
-    window.excluirProduto = function(id) {
-      VerificacaoSenha.verificar((autorizado) => {
-        if (!autorizado) {
-          BackupSystem.mostrarNotificacao('❌ Operação cancelada!', 'warning');
-          return;
-        }
-        
-        if (!confirm('⚠️ Deseja realmente excluir este produto?')) return;
-        
-        const db = buscarDados();
-        db.produtos = db.produtos.filter(p => p.id !== id);
-        salvarDados(db);
-        
-        BackupSystem.mostrarNotificacao('✅ Produto excluído com sucesso!', 'success');
-        carregarListaProdutosModal();
-        carregarProdutos();
-      });
-    };
-
-    document.getElementById('btn-salvar-produto').addEventListener('click', () => {
-      const codigo = document.getElementById('produto-codigo').value.trim();
-      const codigoBarra = document.getElementById('produto-codigo-barra').value.trim();
-      const descricao = document.getElementById('produto-descricao').value.trim();
-      const preco = parseFloat(document.getElementById('produto-preco').value);
-      const estoque = parseInt(document.getElementById('produto-estoque').value) || 0;
-      
-      if (!descricao || !preco) {
-        alert('⚠️ Descrição e preço são obrigatórios!');
-        return;
-      }
-      
-      const db = buscarDados();
-      db.config.ultimoIdProduto = (db.config.ultimoIdProduto || 0) + 1;
-      
-      db.produtos.push({
-        id: db.config.ultimoIdProduto,
-        codigo: codigo || null,
-        codigo_barra: codigoBarra || null,
-        descricao: descricao,
-        preco_venda: preco,
-        estoque: estoque,
-        ativo: true
-      });
-      
-      salvarDados(db);
-      BackupSystem.mostrarNotificacao('✅ Produto cadastrado com sucesso!', 'success');
-      
-      document.getElementById('produto-codigo').value = '';
-      document.getElementById('produto-codigo-barra').value = '';
-      document.getElementById('produto-descricao').value = '';
-      document.getElementById('produto-preco').value = '';
-      document.getElementById('produto-estoque').value = '0';
-      
-      document.querySelector('[data-tab="lista-prod"]').click();
-      carregarListaProdutosModal();
-      carregarProdutos();
-    });
-
-    document.getElementById('busca-produtos-lista').addEventListener('input', carregarListaProdutosModal);
-
-    // ========== ATALHOS DE TECLADO ==========
-    document.addEventListener('keydown', (e) => {
-      if (document.getElementById('screen-login').style.display !== 'none') {
-        if (e.key === 'Enter') document.getElementById('btn-login').click();
-        return;
-      }
-      
-      if (e.key === 'F2' || e.key === 'f2') {
-        e.preventDefault();
-        document.getElementById('busca-produto').focus();
-        document.getElementById('busca-produto').select();
-      }
-      
-      if (e.key === 'F3' || e.key === 'f3') {
-        e.preventDefault();
-        document.getElementById('btn-finalizar').click();
-      }
-      
-      if (e.key === 'F4' || e.key === 'f4') {
-        e.preventDefault();
-        document.getElementById('btn-sangria').click();
-      }
-      
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        if (carrinho.length > 0 && confirm('Deseja limpar o carrinho?')) {
-          carrinho = [];
-          clienteSelecionado = null;
-          document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
-          atualizarCarrinho();
-        }
-        document.getElementById('busca-produto').focus();
-      }
-    });
 
     // ========== INICIALIZAÇÃO ==========
     inicializarDados();
     
+    // Verificar se já está logado
     if (sessionStorage.getItem('user_id')) {
       document.getElementById('user-name').textContent = sessionStorage.getItem('user_nome');
       document.getElementById('screen-login').style.display = 'none';
       document.getElementById('screen-vendas').style.display = 'block';
       carregarProdutos();
-      BackupSystem.atualizarStatus();
-      BackupSystem.atualizarTimer();
+      atualizarStatusBackup();
     }
     
-    setInterval(() => {
-      BackupSystem.verificarBackupAutomatico();
-      BackupSystem.atualizarTimer();
-    }, 60000);
-    
+    // Mensagem de boas-vindas
     setTimeout(() => {
       if (document.getElementById('screen-login').style.display !== 'none') {
-        alert('👋 Bem-vindo ao Sistema de Vendas Completo!\n\n✅ Formas de pagamento (Pix, Cartão, Dinheiro)\n✅ Cálculo automático de troco\n✅ Leitor de código de barras\n✅ Consulta de cupom por número\n✅ Cupom enviado automaticamente para WhatsApp\n✅ Backup automático diário\n✅ Senha admin: java1814\n\n💬 Seu cupom vai direto para o WhatsApp após cada venda!');
+        alert('👋 Sistema de Vendas Completo iniciado!\n\n✅ Login: admin / java1814\n✅ Formas de pagamento com cálculo de troco\n✅ Leitor de código de barras\n✅ Cupom para WhatsApp\n✅ Backup automático\n\n💡 Dica: Use F2 para buscar produtos!');
       }
-    }, 1000);
+    }, 500);
   </script>
 </body>
 </html>
