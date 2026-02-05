@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas - Sistema de Vendas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f5f7fa; color: #333; }
+        .header { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { display: flex; height: calc(100vh - 70px); }
+        .sidebar { width: 350px; background: white; border-right: 1px solid #ddd; padding: 20px; overflow-y: auto; }
+        .search-box { margin-bottom: 20px; position: relative; }
+        .search-box input { width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .search-box input:focus { border-color: #3498db; outline: none; }
+        .client-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .client-box .label { font-weight: bold; color: #7f8c8d; margin-bottom: 8px; display: block; }
+        .client-selected { background: #e3f2fd; padding: 12px; border-radius: 6px; margin-top: 10px; }
+        .client-selected .name { font-weight: bold; color: #2980b9; }
+        .client-selected .doc { font-size: 14px; color: #7f8c8d; }
+        .btn-client { background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; width: 100%; margin-top: 10px; }
+        .btn-client:hover { background: #27ae60; }
+        .products-list { max-height: 300px; overflow-y: auto; }
+        .product-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+        .product-item:hover { background: #f8f9fa; }
+        .product-item .name { font-weight: 500; }
+        .product-item .price { color: #3498db; font-weight: bold; margin-top: 4px; }
+        .cart { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cart-title { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .cart-items { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); flex: 1; overflow-y: auto; }
+        .cart-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item .desc { flex: 2; }
+        .cart-item .qty { flex: 1; text-align: center; color: #7f8c8d; }
+        .cart-item .price { flex: 1; text-align: right; font-weight: bold; }
+        .cart-total { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 18px; }
+        .total-row.final { font-size: 24px; font-weight: bold; color: #3498db; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
+        .actions { display: flex; gap: 15px; margin-top: 25px; }
+        .btn { padding: 15px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #3498db; color: white; flex: 1; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal h3 { margin-bottom: 20px; color: #2c3e50; text-align: center; }
+        .modal input { width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; margin-bottom: 20px; }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 20px; }
+        .shortcut-hint { background: #e3f2fd; color: #1976d2; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; font-size: 14px; }
+        .empty-cart { padding: 30px; text-align: center; color: #999; }
+        .client-list { max-height: 300px; overflow-y: auto; margin-top: 10px; }
+        .client-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .client-item:hover { background: #f8f9fa; }
+        .client-item .name { font-weight: 500; }
+        .client-item .doc { font-size: 12px; color: #7f8c8d; }
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; max-height: 40%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🛒 Armarinho - {{ operador }}</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-success" onclick="window.location.href='/clientes'" style="padding:8px 15px; font-size:14px; background:#2ecc71;">👥 Clientes</button>
+            <button class="btn btn-danger" onclick="window.location.href='/logout'" style="padding:8px 15px; font-size:14px;">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <!-- Seleção de Cliente -->
+            <div class="client-box">
+                <span class="label">👤 Cliente</span>
+                <div id="cliente-selecionado">
+                    <div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>
+                </div>
+                <button class="btn-client" id="btn-selecionar-cliente">Selecionar Cliente</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="busca-produto" placeholder="Código ou nome do produto (F2)" autofocus>
+            </div>
+            
+            <div class="products-list" id="lista-produtos">
+                {% for p in produtos %}
+                <div class="product-item" data-id="{{ p.id }}" data-preco="{{ p.preco_venda }}" data-desc="{{ p.descricao }}">
+                    <div class="name">{{ p.descricao }}</div>
+                    <div class="price">R$ {{ "%.2f"|format(p.preco_venda) }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="shortcut-hint">
+                <strong>Atalhos:</strong> F2 = Buscar • F3 = Finalizar • F4 = Sangria • ESC = Limpar
+            </div>
+        </div>
+        
+        <div class="cart">
+            <div class="cart-header">
+                <div class="cart-title">Carrinho</div>
+                <div id="cart-count">0 itens</div>
+            </div>
+            
+            <div class="cart-items" id="itens-carrinho">
+                <div class="empty-cart">Carrinho vazio. Adicione produtos para iniciar a venda.</div>
+            </div>
+            
+            <div class="cart-total">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">R$ 0,00</span>
+                </div>
+                <div class="total-row final">
+                    <span>Total:</span>
+                    <span id="total">R$ 0,00</span>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-warning" id="btn-sangria">F4 - Sangria</button>
+                <button class="btn btn-danger" id="btn-cancelar">Cancelar Venda</button>
+                <button class="btn btn-primary" id="btn-finalizar">F3 - Finalizar Venda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Selecionar Cliente -->
+    <div class="modal" id="modal-selecionar-cliente">
+        <div class="modal-content">
+            <h3>👥 Selecionar Cliente</h3>
+            <input type="text" id="busca-cliente-modal" placeholder="Buscar por nome ou documento...">
+            
+            <div class="client-list" id="lista-clientes-modal">
+                <!-- Clientes serão carregados aqui -->
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn" id="btn-remover-cliente" style="flex:1; background:#95a5a6; color:white">Remover Cliente</button>
+                <button class="btn" id="btn-fechar-cliente" style="flex:1; background:#7f8c8d; color:white">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sangria -->
+    <div class="modal" id="modal-sangria">
+        <div class="modal-content">
+            <h3>💰 Sangria de Caixa</h3>
+            <input type="number" id="valor-sangria" placeholder="Valor da sangria (ex: 50.00)" step="0.01" min="0.01">
+            <input type="text" id="especificacao-sangria" placeholder="Especificação (opcional)">
+            <input type="password" id="senha-admin-sangria" placeholder="Senha de Administrador (java1814)">
+            
+            <div class="modal-buttons">
+                <button class="btn btn-danger" id="btn-confirmar-sangria" style="flex:1">Confirmar Sangria</button>
+                <button class="btn" id="btn-cancelar-sangria" style="flex:1; background:#95a5a6; color:white">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let carrinho = [];
+        let clienteSelecionado = null;
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        }
+
+        function formatarDocumento(doc, tipo) {
+            if (tipo === 'cpf') {
+                return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            } else {
+                return doc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            }
+        }
+
+        function atualizarCarrinho() {
+            const container = document.getElementById('itens-carrinho');
+            const countEl = document.getElementById('cart-count');
+            const subtotalEl = document.getElementById('subtotal');
+            const totalEl = document.getElementById('total');
+            
+            if (carrinho.length === 0) {
+                container.innerHTML = '<div class="empty-cart">Carrinho vazio. Adicione produtos para iniciar a venda.</div>';
+                countEl.textContent = '0 itens';
+                subtotalEl.textContent = 'R$ 0,00';
+                totalEl.textContent = 'R$ 0,00';
+                return;
+            }
+            
+            let html = '';
+            let subtotal = 0;
+            
+            carrinho.forEach((item, index) => {
+                const totalItem = item.quantidade * item.preco;
+                subtotal += totalItem;
+                
+                html += `
+                    <div class="cart-item">
+                        <div class="desc">${item.descricao}</div>
+                        <div class="qty">${item.quantidade}x</div>
+                        <div class="price">${formatarMoeda(item.preco)}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            countEl.textContent = `${carrinho.length} itens`;
+            subtotalEl.textContent = formatarMoeda(subtotal);
+            totalEl.textContent = formatarMoeda(subtotal);
+        }
+
+        // Carregar clientes no modal
+        async function carregarClientesModal() {
+            try {
+                const response = await fetch('/api/clientes');
+                const clientes = await response.json();
+                
+                const lista = document.getElementById('lista-clientes-modal');
+                if (clientes.length === 0) {
+                    lista.innerHTML = '<div style="padding:15px; text-align:center; color:#999">Nenhum cliente cadastrado</div>';
+                    return;
+                }
+                
+                let html = '';
+                clientes.forEach(c => {
+                    html += `
+                        <div class="client-item" onclick="selecionarCliente(${c.id}, '${c.nome.replace(/'/g, "\\'")}', '${c.documento}', '${c.tipo}')">
+                            <div class="name">${c.nome}</div>
+                            <div class="doc">${formatarDocumento(c.documento, c.tipo)}</div>
+                        </div>
+                    `;
+                });
+                
+                lista.innerHTML = html;
+            } catch (err) {
+                console.error('Erro ao carregar clientes:', err);
+            }
+        }
+
+        // Selecionar cliente
+        window.selecionarCliente = function(id, nome, documento, tipo) {
+            clienteSelecionado = { id, nome, documento, tipo };
+            document.getElementById('cliente-selecionado').innerHTML = `
+                <div class="client-selected">
+                    <div class="name">${nome}</div>
+                    <div class="doc">${formatarDocumento(documento, tipo)}</div>
+                </div>
+            `;
+            document.getElementById('modal-selecionar-cliente').style.display = 'none';
+        };
+
+        // Busca de produtos
+        document.getElementById('busca-produto').addEventListener('input', async (e) => {
+            const termo = e.target.value.trim();
+            const lista = document.getElementById('lista-produtos');
+            
+            if (termo.length < 2) {
+                lista.innerHTML = document.querySelector('.sidebar').querySelector('.products-list').innerHTML;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/produtos/buscar?q=${encodeURIComponent(termo)}`);
+                const resultados = await response.json();
+                
+                if (resultados.length === 0) {
+                    lista.innerHTML = '<div style="padding:15px; text-align:center; color:#999">Nenhum produto encontrado</div>';
+                    return;
+                }
+                
+                let html = '';
+                resultados.forEach(p => {
+                    html += `
+                        <div class="product-item" data-id="${p.id}" data-preco="${p.preco_venda}" data-desc="${p.descricao}">
+                            <div class="name">${p.descricao}</div>
+                            <div class="price">R$ ${p.preco_venda.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                    `;
+                });
+                
+                lista.innerHTML = html;
+            } catch (err) {
+                console.error('Erro na busca:', err);
+            }
+        });
+
+        // Adicionar produto ao carrinho ao clicar
+        document.getElementById('lista-produtos').addEventListener('click', (e) => {
+            const item = e.target.closest('.product-item');
+            if (!item) return;
+            
+            const produtoId = parseInt(item.getAttribute('data-id'));
+            const preco = parseFloat(item.getAttribute('data-preco'));
+            const descricao = item.getAttribute('data-desc');
+            
+            // Verificar se já existe no carrinho
+            const existente = carrinho.find(i => i.produto_id === produtoId);
+            if (existente) {
+                existente.quantidade += 1;
+            } else {
+                carrinho.push({
+                    produto_id: produtoId,
+                    descricao: descricao,
+                    quantidade: 1,
+                    preco: preco
+                });
+            }
+            
+            atualizarCarrinho();
+            document.getElementById('busca-produto').value = '';
+            document.getElementById('busca-produto').focus();
+        });
+
+        // Finalizar venda
+        document.getElementById('btn-finalizar').addEventListener('click', async () => {
+            if (carrinho.length === 0) {
+                alert('⚠️ Adicione produtos ao carrinho antes de finalizar!');
+                return;
+            }
+            
+            const total = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco), 0);
+            let msg = `✅ Confirmar venda no valor de ${formatarMoeda(total)}?`;
+            if (clienteSelecionado) {
+                msg = `✅ Confirmar venda para ${clienteSelecionado.nome} no valor de ${formatarMoeda(total)}?`;
+            }
+            
+            if (!confirm(msg)) {
+                return;
+            }
+            
+            const itensParaEnviar = carrinho.map(item => ({
+                produto_id: item.produto_id,
+                quantidade: item.quantidade,
+                preco_unitario: item.preco
+            }));
+            
+            try {
+                const response = await fetch('/api/vendas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        itens: itensParaEnviar,
+                        total: total,
+                        tipo_cupom: 'nao_fiscal',
+                        cliente_id: clienteSelecionado ? clienteSelecionado.id : null
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let msgSucesso = `✅ Venda ${result.venda_id} registrada com sucesso!\nTotal: ${formatarMoeda(result.total)}`;
+                    if (clienteSelecionado) {
+                        msgSucesso += `\nCliente: ${clienteSelecionado.nome}`;
+                    }
+                    alert(msgSucesso);
+                    
+                    // Limpar carrinho e cliente
+                    carrinho = [];
+                    clienteSelecionado = null;
+                    document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
+                    atualizarCarrinho();
+                } else {
+                    alert('❌ Erro ao registrar venda: ' + (result.error || 'Desconhecido'));
+                }
+            } catch (err) {
+                alert('❌ Erro de conexão com o servidor');
+                console.error(err);
+            }
+        });
+
+        // Modal Selecionar Cliente
+        document.getElementById('btn-selecionar-cliente').addEventListener('click', () => {
+            document.getElementById('modal-selecionar-cliente').style.display = 'flex';
+            carregarClientesModal();
+            document.getElementById('busca-cliente-modal').focus();
+        });
+
+        document.getElementById('btn-fechar-cliente').addEventListener('click', () => {
+            document.getElementById('modal-selecionar-cliente').style.display = 'none';
+        });
+
+        document.getElementById('btn-remover-cliente').addEventListener('click', () => {
+            clienteSelecionado = null;
+            document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
+            document.getElementById('modal-selecionar-cliente').style.display = 'none';
+        });
+
+        // Busca de clientes no modal
+        document.getElementById('busca-cliente-modal').addEventListener('input', async (e) => {
+            const termo = e.target.value.trim();
+            
+            try {
+                const response = await fetch(`/api/clientes?busca=${encodeURIComponent(termo)}`);
+                const clientes = await response.json();
+                
+                const lista = document.getElementById('lista-clientes-modal');
+                if (clientes.length === 0) {
+                    lista.innerHTML = '<div style="padding:15px; text-align:center; color:#999">Nenhum cliente encontrado</div>';
+                    return;
+                }
+                
+                let html = '';
+                clientes.forEach(c => {
+                    html += `
+                        <div class="client-item" onclick="selecionarCliente(${c.id}, '${c.nome.replace(/'/g, "\\'")}', '${c.documento}', '${c.tipo}')">
+                            <div class="name">${c.nome}</div>
+                            <div class="doc">${formatarDocumento(c.documento, c.tipo)}</div>
+                        </div>
+                    `;
+                });
+                
+                lista.innerHTML = html;
+            } catch (err) {
+                console.error('Erro ao buscar clientes:', err);
+            }
+        });
+
+        // Sangria
+        document.getElementById('btn-sangria').addEventListener('click', () => {
+            document.getElementById('modal-sangria').style.display = 'flex';
+            document.getElementById('valor-sangria').focus();
+        });
+
+        document.getElementById('btn-cancelar-sangria').addEventListener('click', () => {
+            document.getElementById('modal-sangria').style.display = 'none';
+        });
+
+        document.getElementById('btn-confirmar-sangria').addEventListener('click', async () => {
+            const valor = parseFloat(document.getElementById('valor-sangria').value);
+            const especificacao = document.getElementById('especificacao-sangria').value;
+            const senha = document.getElementById('senha-admin-sangria').value;
+            
+            if (!valor || valor <= 0) {
+                alert('⚠️ Informe um valor válido para a sangria!');
+                return;
+            }
+            
+            if (senha !== 'java1814') {
+                alert('❌ Senha de administrador inválida! Tente novamente.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/caixa/sangria', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor, especificacao, senha_admin: senha })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Sangria de ${formatarMoeda(valor)} registrada com sucesso!`);
+                    document.getElementById('modal-sangria').style.display = 'none';
+                    document.getElementById('valor-sangria').value = '';
+                    document.getElementById('especificacao-sangria').value = '';
+                    document.getElementById('senha-admin-sangria').value = '';
+                } else {
+                    alert('❌ ' + (result.error || 'Senha de administrador inválida'));
+                }
+            } catch (err) {
+                alert('❌ Erro de conexão com o servidor');
+                console.error(err);
+            }
+        });
+
+        // Cancelar venda
+        document.getElementById('btn-cancelar').addEventListener('click', () => {
+            if (carrinho.length === 0) {
+                alert('ℹ️ Carrinho já está vazio');
+                return;
+            }
+            
+            if (confirm('⚠️ Deseja cancelar esta venda? Todos os itens serão removidos.')) {
+                carrinho = [];
+                clienteSelecionado = null;
+                document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
+                atualizarCarrinho();
+                alert('✅ Venda cancelada com sucesso!');
+            }
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F2' || e.key === 'f2') {
+                e.preventDefault();
+                document.getElementById('busca-produto').focus();
+                document.getElementById('busca-produto').select();
+            }
+            
+            if (e.key === 'F3' || e.key === 'f3') {
+                e.preventDefault();
+                document.getElementById('btn-finalizar').click();
+            }
+            
+            if (e.key === 'F4' || e.key === 'f4') {
+                e.preventDefault();
+                document.getElementById('btn-sangria').click();
+            }
+            
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (carrinho.length > 0 && confirm('Deseja limpar o carrinho?')) {
+                    carrinho = [];
+                    clienteSelecionado = null;
+                    document.getElementById('cliente-selecionado').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Nenhum cliente selecionado</div>';
+                    atualizarCarrinho();
+                }
+                document.getElementById('busca-produto').focus();
+            }
+        });
+
+        // Fechar modais ao clicar fora
+        window.addEventListener('click', (e) => {
+            const modalCliente = document.getElementById('modal-selecionar-cliente');
+            const modalSangria = document.getElementById('modal-sangria');
+            if (e.target === modalCliente) modalCliente.style.display = 'none';
+            if (e.target === modalSangria) modalSangria.style.display = 'none';
+        });
+
+        // Inicialização
+        window.onload = () => {
+            document.getElementById('busca-produto').focus();
+        };
+    </script>
+</body>
+</html>
