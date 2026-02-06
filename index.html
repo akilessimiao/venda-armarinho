@@ -1117,21 +1117,57 @@ function inicializarDados() {
       usuarios: [
         { id: 1, nome: 'Administrador', login: 'admin', senha: 'java1814', perfil: 'admin' },
         { id: 2, nome: 'Operador', login: 'operador', senha: 'operador123', perfil: 'operador' }
+        { id: 3, nome: 'Operador', login: 'beatriz', senha: 'bea123', perfil: 'operador' }
+        { id: 2, nome: 'Operador', login: 'jarliane', senha: 'jarli987', perfil: 'operador' }
       ],
       produtos: [
-        { id: 1, fornecedor: 'Fornecedor A', codigo_barra: '7891234567890', descricao: 'Botão de Madeira', quantidade: 120, preco_custo: 2.50, preco_venda: 5.00, ativo: true },
-        { id: 2, fornecedor: 'Fornecedor B', codigo_barra: '7891234567891', descricao: 'Linha de Algodão', quantidade: 85, preco_custo: 4.25, preco_venda: 8.50, ativo: true },
-        { id: 3, fornecedor: 'Fornecedor C', codigo_barra: '7891234567892', descricao: 'Agulha de Costura', quantidade: 200, preco_custo: 1.60, preco_venda: 3.20, ativo: true },
-        { id: 4, fornecedor: 'Fornecedor A', codigo_barra: '7891234567893', descricao: 'Fita Métrica', quantidade: 50, preco_custo: 6.00, preco_venda: 12.00, ativo: true },
-        { id: 5, fornecedor: 'Fornecedor D', codigo_barra: '7891234567894', descricao: 'Tesoura Profissional', quantidade: 30, preco_custo: 12.50, preco_venda: 25.00, ativo: true },
-        { id: 6, fornecedor: 'Fornecedor B', codigo_barra: '7891234567895', descricao: 'Zipper 20cm', quantidade: 150, preco_custo: 2.40, preco_venda: 4.80, ativo: true },
-        { id: 7, fornecedor: 'Fornecedor C', codigo_barra: '7891234567896', descricao: 'Elástico 1m', quantidade: 200, preco_custo: 1.25, preco_venda: 2.50, ativo: true },
-        { id: 8, fornecedor: 'Fornecedor A', codigo_barra: '7891234567897', descricao: 'Viés Estampado', quantidade: 75, preco_custo: 3.45, preco_venda: 6.90, ativo: true }
+     // === BEBIDAS ===
+        { id: 1, fornecedor: 'Destilaria Caranguejo', codigo_barra: '', descricao: 'Cachaça Caranguejo Prata 1L', quantidade: 20, preco_custo: 10.00, preco_venda: 14.00, ativo: true },
+        { id: 2, fornecedor: 'Destilaria Caranguejo', codigo_barra: '', descricao: 'Cachaça Caranguejo Limão 1L', quantidade: 15, preco_custo: 13.00, preco_venda: 18.00, ativo: true },
+        { id: 3, fornecedor: 'Pitu', codigo_barra: '', descricao: 'Latão Pitu', quantidade: 30, preco_custo: 6.50, preco_venda: 9.00, ativo: true },
+        { id: 4, fornecedor: 'Del Valle', codigo_barra: '', descricao: 'Suco de Uva Del Valle', quantidade: 25, preco_custo: 6.50, preco_venda: 9.00, ativo: true },
+        { id: 5, fornecedor: 'Ypioca', codigo_barra: '', descricao: 'Ypioca Lata', quantidade: 40, preco_custo: 5.00, preco_venda: 7.00, ativo: true },
+        { id: 6, fornecedor: '51', codigo_barra: '', descricao: '51 Lata', quantidade: 40, preco_custo: 5.00, preco_venda: 7.00, ativo: true },
+        { id: 7, fornecedor: 'Mansão', codigo_barra: '', descricao: 'Mansão Maromba', quantidade: 12, preco_custo: 16.00, preco_venda: 22.00, ativo: true },
+        { id: 8, fornecedor: 'Pitu', codigo_barra: '', descricao: 'Dose Pitu', quantidade: 50, preco_custo: 1.20, preco_venda: 2.00, ativo: true },
+        { id: 9, fornecedor: 'Dreher', codigo_barra: '', descricao: 'Dose Dreher', quantidade: 40, preco_custo: 2.00, preco_venda: 3.00, ativo: true },
+        { id: 10, fornecedor: 'Caranguejo', codigo_barra: '', descricao: 'Dose Caranguejo', quantidade: 50, preco_custo: 1.20, preco_venda: 2.00, ativo: true },
+        { id: 11, fornecedor: 'Coca-Cola', codigo_barra: '', descricao: 'Coca Cola Lata', quantidade: 60, preco_custo: 3.50, preco_venda: 5.00, ativo: true },
+        
+        // === DOCES E SALGADINHOS ===
+        { id: 12, fornecedor: 'Halls', codigo_barra: '', descricao: 'Pastilha Halls', quantidade: 30, preco_custo: 2.00, preco_venda: 3.00, ativo: true },
+        { id: 13, fornecedor: 'Freegels', codigo_barra: '', descricao: 'Pastilha Freegels', quantidade: 25, preco_custo: 1.70, preco_venda: 2.50, ativo: true },
+        { id: 14, fornecedor: 'Kro', codigo_barra: '', descricao: 'Pipoca Kro', quantidade: 35, preco_custo: 2.20, preco_venda: 3.00, ativo: true },
+        { id: 15, fornecedor: 'Pepsi', codigo_barra: '', descricao: 'Pipos', quantidade: 45, preco_custo: 3.50, preco_venda: 5.00, ativo: true },
+        { id: 16, fornecedor: 'Vários', codigo_barra: '', descricao: 'Biscoitos Recheado', quantidade: 40, preco_custo: 2.20, preco_venda: 3.00, ativo: true },
+        { id: 17, fornecedor: 'Fruit Tella', codigo_barra: '', descricao: 'Fruit Tella', quantidade: 30, preco_custo: 1.80, preco_venda: 2.50, ativo: true },
+        { id: 18, fornecedor: 'Kisuk', codigo_barra: '', descricao: 'Kisuk', quantidade: 50, preco_custo: 1.00, preco_venda: 1.50, ativo: true },
+        
+        // === MIOJOS ===
+        { id: 19, fornecedor: 'Nissin', codigo_barra: '', descricao: 'Miojo Nissin Carne', quantidade: 40, preco_custo: 2.20, preco_venda: 3.00, ativo: true },
+        { id: 20, fornecedor: 'Nissin', codigo_barra: '', descricao: 'Miojo Nissin Galinha', quantidade: 35, preco_custo: 2.60, preco_venda: 3.50, ativo: true },
+        { id: 21, fornecedor: 'Nissin', codigo_barra: '', descricao: 'Cup Noodles', quantidade: 25, preco_custo: 6.00, preco_venda: 8.00, ativo: true },
+        
+        // === MERCADINHO ===
+        { id: 22, fornecedor: 'Santa Clara', codigo_barra: '', descricao: 'Café Santa Clara', quantidade: 20, preco_custo: 14.00, preco_venda: 18.00, ativo: true },
+        { id: 23, fornecedor: 'Vários', codigo_barra: '', descricao: 'Óleo', quantidade: 30, preco_custo: 7.50, preco_venda: 10.00, ativo: true },
+        { id: 24, fornecedor: 'Vários', codigo_barra: '', descricao: 'Sal', quantidade: 50, preco_custo: 1.30, preco_venda: 2.00, ativo: true },
+        { id: 25, fornecedor: 'Vários', codigo_barra: '', descricao: 'Açúcar', quantidade: 40, preco_custo: 3.80, preco_venda: 5.00, ativo: true },
+        { id: 26, fornecedor: 'Nestlé', codigo_barra: '', descricao: 'Kitut', quantidade: 25, preco_custo: 9.00, preco_venda: 12.00, ativo: true },
+        { id: 27, fornecedor: 'Sazón', codigo_barra: '', descricao: 'Sazón unidade', quantidade: 100, preco_custo: 0.30, preco_venda: 0.50, ativo: true },
+        { id: 28, fornecedor: 'Vários', codigo_barra: '', descricao: 'Margarina', quantidade: 35, preco_custo: 3.80, preco_venda: 5.00, ativo: true },
+        { id: 29, fornecedor: 'Vários', codigo_barra: '', descricao: 'Creme de Leite', quantidade: 30, preco_custo: 2.20, preco_venda: 3.00, ativo: true },
+        { id: 30, fornecedor: 'Vários', codigo_barra: '', descricao: 'Leite Condensado', quantidade: 35, preco_custo: 3.80, preco_venda: 5.00, ativo: true },
+        { id: 31, fornecedor: 'Vários', codigo_barra: '', descricao: 'Macarrão Espaguete', quantidade: 40, preco_custo: 3.20, preco_venda: 4.50, ativo: true },
+        { id: 32, fornecedor: 'Vários', codigo_barra: '', descricao: 'Coloral', quantidade: 30, preco_custo: 2.20, preco_venda: 3.00, ativo: true },
+        { id: 33, fornecedor: 'Nestlé', codigo_barra: '', descricao: 'Dueto', quantidade: 25, preco_custo: 3.80, preco_venda: 5.00, ativo: true },
+        { id: 34, fornecedor: 'Vários', codigo_barra: '', descricao: 'Molho de Tomate', quantidade: 35, preco_custo: 1.80, preco_venda: 2.50, ativo: true },
+        { id: 35, fornecedor: 'Quero', codigo_barra: '', descricao: 'Maionese Quero', quantidade: 30, preco_custo: 3.20, preco_venda: 4.50, ativo: true }
       ],
       clientes: [
-        { id: 1, nome: 'Maria Silva', tipo: 'cpf', documento: '12345678901', whatsapp: '84999999999', telefone: '8433333333', email: 'maria@email.com', endereco: 'Rua A, 123', ativo: true },
-        { id: 2, nome: 'João Santos', tipo: 'cpf', documento: '98765432109', whatsapp: '84888888888', telefone: '8444444444', email: 'joao@email.com', endereco: 'Rua B, 456', ativo: true },
-        { id: 3, nome: 'Confecção LTDA', tipo: 'cnpj', documento: '12345678000190', whatsapp: '84777777777', telefone: '8433333333', email: 'contato@confeccao.com.br', endereco: 'Av. Industrial, 789', ativo: true }
+        { id: 1, nome: 'CLIENTE', tipo: 'cpf', documento: '12345678901', whatsapp: '84999999999', telefone: '8433333333', email: 'maria@email.com', endereco: 'Rua A, 123', ativo: true },
+        { id: 2, nome: 'CLIENTE1', tipo: 'cpf', documento: '98765432109', whatsapp: '84888888888', telefone: '8444444444', email: 'joao@email.com', endereco: 'Rua B, 456', ativo: true },
+        { id: 3, nome: 'CLIENTEPJ', tipo: 'cnpj', documento: '12345678000190', whatsapp: '84777777777', telefone: '8433333333', email: 'contato@confeccao.com.br', endereco: 'Av. Industrial, 789', ativo: true }
       ],
       vendas: [],
       movimentacoes: [],
